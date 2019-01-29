@@ -24,12 +24,18 @@
     <ClCompile Include="GraphLayoutDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GraphEditor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GraphLayoutDemoState.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GraphLayoutDemo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphEditor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -11,11 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GraphEditor.cpp" />
     <ClCompile Include="GraphLayoutDemoState.cpp" />
     <ClCompile Include="GraphLayoutDemo.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GraphEditor.hpp" />
     <ClInclude Include="GraphLayoutDemoState.hpp" />
     <ClInclude Include="GraphLayoutDemo.hpp" />
   </ItemGroup>

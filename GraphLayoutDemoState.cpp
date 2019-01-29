@@ -4,9 +4,9 @@
 #include <Usagi/Runtime/Runtime.hpp>
 #include <Usagi/Runtime/Input/InputManager.hpp>
 
-#include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <Usagi/Extension/ImGui/ImGuiSubsystem.hpp>
-#include <Usagi/Extension/ImGui//DelegatedImGuiComponent.hpp>
+
+#include "GraphEditor.hpp"
 
 usagi::GraphLayoutDemoState::GraphLayoutDemoState(
     Element *parent,
@@ -23,5 +23,5 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
     ));
     imgui->setSizeFunctionsFromRenderWindow(mGame->mainWindow());
 
-    // addChild<...>("...");
+    addChild<GraphEditor>("GraphEditor");
 }
