@@ -20,7 +20,7 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
     for(auto && v : mGraph.vertices)
     {
         draw_list.AddCircleFilled(
-            im(v), mVertexRadius,
+            im(v.position), mVertexRadius,
             ColorConvertFloat4ToU32((ImVec4&)mVertexColor),
             5
         );
@@ -28,8 +28,8 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
     for(auto && e : mGraph.edges)
     {
         draw_list.AddLine(
-            im(mGraph.vertices[e.first]),
-            im(mGraph.vertices[e.second]),
+            im(mGraph.vertices[e.first].position),
+            im(mGraph.vertices[e.second].position),
             ColorConvertFloat4ToU32((ImVec4&)mEdgeColor)
         );
     }
@@ -43,9 +43,16 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
         if(Button("Generate Graph"))
             generateGraph();
 
-        Button("Step Naive Spring Algorithm");
+        Checkbox("Update", &mUpdate);
+        if(Button("Step Naive Spring Algorithm"))
+        {
+            mLayout.update();
+        }
     }
     End();
+
+    if(mUpdate)
+        mLayout.update();
 }
 
 void usagi::GraphEditor::generateGraph()
@@ -54,14 +61,15 @@ void usagi::GraphEditor::generateGraph()
     mGraph.vertices.clear();
     mGraph.vertices.reserve(mVertexCount);
     mGraph.edges.clear();
-    mGraph.edges.reserve(mEdgeCount * mVertexCount);
 
     for(int i = 0; i < mVertexCount; ++i)
     {
-        mGraph.vertices.emplace_back(s.next2D() * 1000);
+        mGraph.vertices.push_back({ s.next2D() * 1000, Vector2f::Zero() });
         for(int j = 0; j < mEdgeCount; ++j)
         {
-            mGraph.edges.push_back({ i, (i + j) % mVertexCount });
+            const auto i2 = (i + j) % mVertexCount;
+            if(i != i2)
+                mGraph.edges.insert({ i, i2 });
         }
     }
 }

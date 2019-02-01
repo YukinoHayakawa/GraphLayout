@@ -25,6 +25,9 @@
     <ProjectReference Include="..\..\Usagi\Usagi\Usagi.vcxproj">
       <Project>{4250e1c0-ea0b-4575-bc04-11e7f83c2ed4}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\GraphLayout\GraphLayout.vcxproj">
+      <Project>{2578cfa4-1fec-48ac-9f77-c6fac4733710}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
