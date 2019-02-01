@@ -14,7 +14,7 @@ usagi::GraphLayoutDemo::GraphLayoutDemo(std::shared_ptr<Runtime> runtime)
 {
     assets()->addChild<FilesystemAssetPackage>("imgui", "Data/imgui");
     createMainWindow(
-        u8"Usagi Graphical Game",
+        u8"Graph Layout Demo",
         Vector2i { 100, 100 },
         Vector2u32 { 1920, 1080 }
     );
