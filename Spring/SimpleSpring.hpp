@@ -1,14 +1,17 @@
 ﻿#pragma once
-#include <type_traits>
+
+#include <cmath>
 
 namespace usagi
 {
+struct ForcePropertyTag;
+
 /**
  * \brief Based on:
  * P. Eades. A heuristic for graph drawing.
  * Congressus Numerantium, 42:149–160, 1984.
  */
-template <typename Graph, typename GraphTraits>
+template <typename Graph, typename GraphTraits = typename Graph::traits_t>
 class SimpleSpring
 {
     // graph representation
@@ -29,17 +32,13 @@ class SimpleSpring
      */
 
     Graph &mGraph;
-    using Vertex = typename GraphTraits::Vertex;
     GraphTraits mTraits;
-    float c1, c2, c3, c4;
+    float c1 = 2 , c2 = 1, c3 = 1, c4 = 0.1f;
 
 public:
-    struct ForcePropertyTag;
-    struct PositionPropertyTag;
-
-    SimpleSpring()
+    SimpleSpring(Graph &graph)
+        : mGraph(graph)
     {
-        // Initialize Positions: place vertices of G in random locations;
     }
 
     // single update iteration
@@ -52,33 +51,42 @@ public:
         auto i = mTraits.vertex_begin(mGraph);
         auto end = mTraits.vertex_end(mGraph);
 
+        using ForceAccessor = typename GraphTraits::template property_accessor
+            <ForcePropertyTag>;
+
         // calculate the force acting on each vertex
         for(; i != end; ++i)
         {
             // each vertex is affected by all other vertices
-            typename GraphTraits::force_t force { };
+            typename GraphTraits::vector2_t force { 0, 0 };
             auto other_i = mTraits.vertex_begin(mGraph);
             auto other_end = mTraits.vertex_end(mGraph);
             for(; other_i != other_end; ++other_i)
             {
+                if(i == other_i) continue;
+
                 auto &&p0 = mTraits.position(i);
                 auto &&p1 = mTraits.position(other_i);
                 // adjacent: edge = logarithmic springs
-                if(mTraits.is_adjancent(i, other_i))
+                if(mTraits.is_adjacent(mGraph, i, other_i))
                 {
                     // attractive force direction
-                    auto dir = p1 - p0;
-                    force += c1 * log(length(dir) / c2);
+                    const auto dir = normalized(p1 - p0);
+                    const auto l = length(dir);
+                    assert(l > 0);
+                    force += dir * c1 * std::log(length(dir) / c2);
                 }
                 // nonadjacent: repulsive force
                 else
                 {
-                    auto dir = p0 - p1;
-                    force += c3 / sqrt(length(dir));
+                    const auto dir = normalized(p0 - p1);
+                    const auto l = length(dir);
+                    assert(l > 0);
+                    force += dir * c3 / std::sqrt(l);
                 }
             }
-            typename GraphTraits::template property_accessor
-                <ForcePropertyTag>()(i) = force;
+            ForceAccessor force_accessor;
+            force_accessor(i) = force;
         }
 
         // move the vertex c4 ∗ (force on vertex);
@@ -86,8 +94,7 @@ public:
         for(; i != end; ++i)
         {
             auto &&p = mTraits.position(i);
-            p += c4 * typename GraphTraits::template property_accessor
-                <ForcePropertyTag>()(i);
+            p += c4 * ForceAccessor()(i);
         }
 
         // draw a filled circle for each vertex;
