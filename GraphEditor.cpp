@@ -13,9 +13,10 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
     draw_list.Flags &= ~ImDrawListFlags_AntiAliasedFill;
     draw_list.Flags &= ~ImDrawListFlags_AntiAliasedLines;
 
-    const auto im = [](const Vector2f &v) { return ImVec2 {
-        v.x(), v.y()
-    }; };
+    const auto im = [this](const Vector2f &v) {
+        const auto t = v * mScale + mOffset;
+        return ImVec2 { t.x(), t.y() };
+    };
 
     for(auto && v : mGraph.vertices)
     {
@@ -48,6 +49,18 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
         {
             mLayout.update();
         }
+
+        DragFloat("c1 (spring constant)", &mLayout.c1,
+            0.1f, 0.1f, 1000.f);
+        DragFloat("c2 (original spring length)", &mLayout.c2,
+            0.1f, 0.1f, 1000.f);
+        DragFloat("c3 (repel factor)", &mLayout.c3,
+            0.1f, 0.1f, 1000.f);
+        DragFloat("c4 (update rate)", &mLayout.c4,
+            0.1f, 0.1f, 1000.f);
+
+        DragFloat("View Scale", &mScale, 0.01f);
+        DragFloat2("View Offset", mOffset.data());
     }
     End();
 
@@ -64,7 +77,7 @@ void usagi::GraphEditor::generateGraph()
 
     for(int i = 0; i < mVertexCount; ++i)
     {
-        mGraph.vertices.push_back({ s.next2D() * 1000, Vector2f::Zero() });
+        mGraph.vertices.push_back({ s.next2D(), Vector2f::Zero() });
         for(int j = 0; j < mEdgeCount; ++j)
         {
             const auto i2 = (i + j) % mVertexCount;

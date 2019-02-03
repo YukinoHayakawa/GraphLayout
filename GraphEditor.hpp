@@ -8,7 +8,9 @@
 
 namespace usagi
 {
-class GraphEditor : public PredefinedElement<DelegatedImGuiComponent>
+class GraphEditor : public PredefinedElement<
+    DelegatedImGuiComponent
+>
 {
     SimplePointGraph mGraph;
     float mVertexRadius = 10;
@@ -17,6 +19,8 @@ class GraphEditor : public PredefinedElement<DelegatedImGuiComponent>
     int mVertexCount = 20;
     int mEdgeCount = 5;
     bool mUpdate = false;
+    float mScale = 100.f;
+    Vector2f mOffset = { 1920, 1080 };
     SimpleSpring<SimplePointGraph> mLayout { mGraph };
 
     void drawEditor(const Clock &clock);
