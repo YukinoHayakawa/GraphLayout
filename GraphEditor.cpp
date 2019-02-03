@@ -59,6 +59,8 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
         DragFloat("c4 (update rate)", &mLayout.c4,
             0.1f, 0.1f, 1000.f);
 
+        DragFloat("Edge Connect Possibility", &mEdgeConnectP,
+            0.01f, 0, 1);
         DragFloat("View Scale", &mScale, 0.01f);
         DragFloat2("View Offset", mOffset.data());
     }
@@ -81,7 +83,7 @@ void usagi::GraphEditor::generateGraph()
         for(int j = 0; j < mEdgeCount; ++j)
         {
             const auto i2 = (i + j) % mVertexCount;
-            if(i != i2)
+            if(i != i2 && mD(mRng) < mEdgeConnectP)
                 mGraph.edges.insert({ i, i2 });
         }
     }

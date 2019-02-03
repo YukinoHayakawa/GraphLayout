@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <random>
+
 #include <Usagi/Core/PredefinedElement.hpp>
 #include <Usagi/Extension/ImGui/DelegatedImGuiComponent.hpp>
 
@@ -20,6 +22,10 @@ class GraphEditor : public PredefinedElement<
     int mEdgeCount = 5;
     bool mUpdate = false;
     float mScale = 100.f;
+    float mEdgeConnectP = 0.5;
+    std::mt19937 mRng;
+    std::uniform_real_distribution<float> mD { 0, 1 };
+
     Vector2f mOffset = { 1920, 1080 };
     SimpleSpring<SimplePointGraph> mLayout { mGraph };
 
