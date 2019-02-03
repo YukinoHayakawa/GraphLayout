@@ -12,7 +12,7 @@ struct ForcePropertyTag;
  * Congressus Numerantium, 42:149–160, 1984.
  */
 template <typename Graph, typename GraphTraits = typename Graph::traits_t>
-class SimpleSpring
+struct SimpleSpring
 {
     // graph representation
     // node properties - user/algorithm
@@ -33,9 +33,16 @@ class SimpleSpring
 
     Graph &mGraph;
     GraphTraits mTraits;
-    float c1 = 2 , c2 = 1, c3 = 1, c4 = 0.1f;
 
-public:
+    // spring force constant
+    float c1 = 2;
+    // original (unloaded/stretched/compressed) spring length
+    float c2 = 1;
+    // repel factor
+    float c3 = 1;
+    // update rate
+    float c4 = 0.1f;
+
     SimpleSpring(Graph &graph)
         : mGraph(graph)
     {
@@ -67,22 +74,25 @@ public:
 
                 auto &&p0 = mTraits.position(i);
                 auto &&p1 = mTraits.position(other_i);
+                // attractive force direction
+                const auto dist = p1 - p0;
+                const auto dir = normalized(dist);
+                const auto l = length(dist);
+                assert(l > 0);
+
                 // adjacent: edge = logarithmic springs
                 if(mTraits.is_adjacent(mGraph, i, other_i))
                 {
-                    // attractive force direction
-                    const auto dir = normalized(p1 - p0);
-                    const auto l = length(dir);
-                    assert(l > 0);
-                    force += dir * c1 * std::log(length(dir) / c2);
+                    // log(x) > 0 when x > 1 and < 0 when 0 < x < 1.
+                    // therefore, when l (real spring length is longer than
+                    // c2 (steady spring length, the force is attractive.
+                    // otherwise it is repulsive.
+                    force += dir * c1 * std::log(l / c2);
                 }
-                // nonadjacent: repulsive force
+                // nonadjacent: repulsive force (always)
                 else
                 {
-                    const auto dir = normalized(p0 - p1);
-                    const auto l = length(dir);
-                    assert(l > 0);
-                    force += dir * c3 / std::sqrt(l);
+                    force -= dir * c3 / std::sqrt(l);
                 }
             }
             ForceAccessor force_accessor;
