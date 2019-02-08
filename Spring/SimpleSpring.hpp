@@ -65,7 +65,8 @@ struct SimpleSpring
         for(; i != end; ++i)
         {
             // each vertex is affected by all other vertices
-            typename GraphTraits::vector2_t force { 0, 0 };
+            typename GraphTraits::vector_t force;
+            set_zeros(force);
             auto other_i = mTraits.vertex_begin(mGraph);
             auto other_end = mTraits.vertex_end(mGraph);
             for(; other_i != other_end; ++other_i)

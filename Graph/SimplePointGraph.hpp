@@ -10,10 +10,12 @@ struct SimplePointGraphTraits;
 
 struct SimplePointGraph
 {
+    using vector_t = Vector3f;
+
     struct Vertex
     {
-        Vector2f position;
-        Vector2f force;
+        vector_t position;
+        vector_t force;
     };
 
     using vertex_container_t = std::vector<Vertex>;
@@ -25,6 +27,8 @@ struct SimplePointGraph
 
 struct SimplePointGraphTraits
 {
+    using vector_t = SimplePointGraph::vector_t;
+
     static auto vertex_begin(SimplePointGraph &g)
     {
         return g.vertices.begin();
@@ -54,9 +58,22 @@ struct SimplePointGraphTraits
 
     template <typename PropertyTag>
     struct property_accessor;
-
-    using vector2_t = Vector2f;
 };
+
+inline auto length(const SimplePointGraphTraits::vector_t &v)
+{
+    return v.norm();
+}
+
+inline auto normalized(const SimplePointGraphTraits::vector_t &v)
+{
+    return v.normalized();
+}
+
+inline void set_zeros(SimplePointGraphTraits::vector_t &v)
+{
+    v = SimplePointGraphTraits::vector_t::Zero();
+}
 
 template <>
 struct SimplePointGraphTraits::property_accessor<struct ForcePropertyTag>
@@ -67,14 +84,4 @@ struct SimplePointGraphTraits::property_accessor<struct ForcePropertyTag>
         return v->force;
     }
 };
-
-inline auto length(const Vector2f &v)
-{
-    return v.norm();
-}
-
-inline auto normalized(const Vector2f &v)
-{
-    return v.normalized();
-}
 }
