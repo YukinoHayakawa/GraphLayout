@@ -4,6 +4,7 @@
 #include <Usagi/Sampler/RandomSampler.hpp>
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <imgui/imgui_internal.h>
+#include <Usagi/Interactive/InputMapping.hpp>
 
 void usagi::GraphEditor::drawEditor(const Clock &clock)
 {
@@ -18,7 +19,7 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
         return ImVec2 { t.x(), t.y() };
     };
 
-    for(auto && v : mGraph.vertices)
+    for(auto &&v : mGraph.vertices)
     {
         draw_list.AddCircleFilled(
             im(v.position), mVertexRadius,
@@ -26,7 +27,7 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
             5
         );
     }
-    for(auto && e : mGraph.edges)
+    for(auto &&e : mGraph.edges)
     {
         draw_list.AddLine(
             im(mGraph.vertices[e.first].position),
@@ -90,10 +91,37 @@ void usagi::GraphEditor::generateGraph()
 }
 
 usagi::GraphEditor::GraphEditor(Element *parent, std::string name)
-    : PredefinedElement<DelegatedImGuiComponent>(parent, std::move(name))
+    : PredefinedElement(parent, std::move(name))
 {
     comp<DelegatedImGuiComponent>()->draw_func =
         partial_apply(&GraphEditor::drawEditor, this);
 
     generateGraph();
+
+    const auto input_mapping = comp<InputComponent>()->input_mapping;
+    auto ui_actions = input_mapping->actionGroup("GraphEditorUI");
+    // zoom in
+    ui_actions->setBinaryActionHandler("ZoomIn",
+        [this](bool pressed) {
+            if(pressed) mScale += 10;
+        });
+    ui_actions->bindMouseButton("ZoomIn", MouseButtonCode::WHEEL_UP);
+    // zoom out
+    ui_actions->setBinaryActionHandler("ZoomOut",
+        [this](bool pressed) {
+            if(pressed) mScale -= 10;
+        });
+    ui_actions->bindMouseButton("ZoomOut", MouseButtonCode::WHEEL_DOWN);
+    // generate graph
+    ui_actions->setBinaryActionHandler("GenerateGraph",
+        [this](bool pressed) {
+            if(pressed) generateGraph();
+        });
+    ui_actions->bindKey("GenerateGraph", KeyCode::F5);
+    // update
+    ui_actions->setBinaryActionHandler("ToggleUpdateGraph",
+        [this](bool pressed) {
+            if(pressed) mUpdate = !mUpdate;
+        });
+    ui_actions->bindKey("ToggleUpdateGraph", KeyCode::F6);
 }

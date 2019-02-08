@@ -4,6 +4,7 @@
 
 #include <Usagi/Core/PredefinedElement.hpp>
 #include <Usagi/Extension/ImGui/DelegatedImGuiComponent.hpp>
+#include <Usagi/Interactive/InputComponent.hpp>
 
 #include "../GraphLayout/Graph/SimplePointGraph.hpp"
 #include "../GraphLayout/Spring/SimpleSpring.hpp"
@@ -11,7 +12,8 @@
 namespace usagi
 {
 class GraphEditor : public PredefinedElement<
-    DelegatedImGuiComponent
+    DelegatedImGuiComponent,
+    InputComponent
 >
 {
     SimplePointGraph mGraph;
@@ -34,6 +36,5 @@ class GraphEditor : public PredefinedElement<
 
 public:
     GraphEditor(Element *parent, std::string name);
-
 };
 }
