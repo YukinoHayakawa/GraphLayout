@@ -13,12 +13,13 @@ usagi::GraphLayoutDemo::GraphLayoutDemo(std::shared_ptr<Runtime> runtime)
     : GraphicalGame(std::move(runtime))
 {
     assets()->addChild<FilesystemAssetPackage>("imgui", "Data/imgui");
+    assets()->addChild<FilesystemAssetPackage>("dd", "Data/debugdraw");
     createMainWindow(
         u8"Graph Layout Demo",
         Vector2i { 100, 100 },
         Vector2u32 { 1920, 1080 }
     );
-    setupRenderTargets(false);
+    setupRenderTargets(true);
 
     mStateManager->pushState<GraphLayoutDemoState>(
         "GraphLayoutDemoState", this);

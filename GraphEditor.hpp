@@ -4,6 +4,7 @@
 
 #include <Usagi/Core/PredefinedElement.hpp>
 #include <Usagi/Extension/ImGui/DelegatedImGuiComponent.hpp>
+#include <Usagi/Extension/DebugDraw/DebugDrawComponent.hpp>
 #include <Usagi/Interactive/InputComponent.hpp>
 
 #include "../GraphLayout/Graph/SimplePointGraph.hpp"
@@ -11,10 +12,11 @@
 
 namespace usagi
 {
-class GraphEditor : public PredefinedElement<
-    DelegatedImGuiComponent,
-    InputComponent
->
+class GraphEditor
+    : public PredefinedElement<
+        DelegatedImGuiComponent,
+        InputComponent
+    >, public DebugDrawComponent
 {
     SimplePointGraph mGraph;
     float mVertexRadius = 10;
@@ -36,5 +38,7 @@ class GraphEditor : public PredefinedElement<
 
 public:
     GraphEditor(Element *parent, std::string name);
+
+    void draw(dd::ContextHandle ctx) override;
 };
 }

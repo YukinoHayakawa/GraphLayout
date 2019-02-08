@@ -124,4 +124,12 @@ usagi::GraphEditor::GraphEditor(Element *parent, std::string name)
             if(pressed) mUpdate = !mUpdate;
         });
     ui_actions->bindKey("ToggleUpdateGraph", KeyCode::F6);
+
+    addComponent(this);
+}
+
+void usagi::GraphEditor::draw(dd::ContextHandle ctx)
+{
+    const Vector3f origin = Vector3f::Zero();
+    dd::sphere(ctx, origin.data(), dd::colors::Azure, 5.0f);
 }
