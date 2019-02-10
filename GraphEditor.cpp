@@ -14,7 +14,7 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
     draw_list.Flags &= ~ImDrawListFlags_AntiAliasedFill;
     draw_list.Flags &= ~ImDrawListFlags_AntiAliasedLines;
 
-    const auto im = [this](const Vector2f &v) {
+    /*const auto im = [this](const Vector3f &v) {
         const auto t = v * mScale + mOffset;
         return ImVec2 { t.x(), t.y() };
     };
@@ -34,7 +34,7 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
             im(mGraph.vertices[e.second].position),
             ColorConvertFloat4ToU32((ImVec4&)mEdgeColor)
         );
-    }
+    }*/
 
     if(Begin("Graph Editor"))
     {
@@ -80,7 +80,7 @@ void usagi::GraphEditor::generateGraph()
 
     for(int i = 0; i < mVertexCount; ++i)
     {
-        mGraph.vertices.push_back({ s.next2D(), Vector2f::Zero() });
+        mGraph.vertices.push_back({ s.next3D(), Vector3f::Zero() });
         for(int j = 0; j < mEdgeCount; ++j)
         {
             const auto i2 = (i + j) % mVertexCount;
@@ -131,5 +131,21 @@ usagi::GraphEditor::GraphEditor(Element *parent, std::string name)
 void usagi::GraphEditor::draw(dd::ContextHandle ctx)
 {
     const Vector3f origin = Vector3f::Zero();
-    dd::sphere(ctx, origin.data(), dd::colors::Azure, 5.0f);
+    // sphere(ctx, origin.data(), dd::colors::Azure, 5.0f);
+
+    const Matrix4f transform = Matrix4f::Identity();
+    dd::axisTriad(ctx, transform.data(), 0.5, 5);
+
+    for(auto &&v : mGraph.vertices)
+    {
+        dd::point(ctx, v.position.data(), mVertexColor, 10);
+    }
+    for(auto &&e : mGraph.edges)
+    {
+        dd::line(ctx,
+            mGraph.vertices[e.first].position.data(),
+            mGraph.vertices[e.second].position.data(),
+            mEdgeColor
+        );
+    }
 }
