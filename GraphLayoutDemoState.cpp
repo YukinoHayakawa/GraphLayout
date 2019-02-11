@@ -16,6 +16,7 @@
 #include <Usagi/Runtime/Graphics/Swapchain.hpp>
 #include <Usagi/Runtime/Window/Window.hpp>
 #include <Usagi/Camera/CameraSample.hpp>
+#include <Usagi/Geometry/RayCastSubsystem.hpp>
 
 #include "GraphEditor.hpp"
 
@@ -53,7 +54,7 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
     mInputMapping = addChild<InputMapping>("InputMapping");
     input_manager->virtualMouse()->addEventListener(mInputMapping);
     input_manager->virtualKeyboard()->addEventListener(mInputMapping);
-    addSubsystem<InputSubsystem>("input", mInputMapping);
+    addSubsystem<InputSubsystem>("Input", mInputMapping);
 
     // camera
     mCameraElement = addChild<ModelCameraMan>(
@@ -68,6 +69,9 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
         &ModelViewCameraController::rotate,
         mCameraElement->cameraController()));
     cam_actions->bindMouseRelativeMovement("Rotate");
+
+    // ray cast
+    mRayCast = addSubsystem<RayCastSubsystem>("RayCast");
 
     // graph editor
     mInputMapping->addActionGroup("GraphEditorUI");
@@ -90,7 +94,7 @@ void usagi::GraphLayoutDemoState::update(const Clock &clock)
 void usagi::GraphLayoutDemoState::resume()
 {
     mInputMapping->actionGroup("GraphEditorUI")->activate();
-    mInputMapping->actionGroup("Camera")->activate();
+    // mInputMapping->actionGroup("Camera")->activate();
 }
 
 void usagi::GraphLayoutDemoState::draw(dd::ContextHandle ctx)
@@ -102,8 +106,10 @@ void usagi::GraphLayoutDemoState::draw(dd::ContextHandle ctx)
     auto ray =
         mCameraElement->cameraController()->transform()->localToWorld() *
          mCameraElement->camera()->generateRay(s);
-    Vector3f to =(ray.origin + 10 * ray.direction);
-    float color[] = { 1.f, 1.f, 0.f };
-    dd::sphere(ctx, to.data(), color, 0.1f);
-    // dd::line(ctx, ray.origin.data(), );
+    auto x = mRayCast->intersect(ray);
+    if(x.has_value())
+    {
+        float color[] = { 1.f, 0.f, 0.f };
+        dd::sphere(ctx, x.value().position.data(), color, 0.1f);
+    }
 }

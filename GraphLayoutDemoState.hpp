@@ -6,6 +6,7 @@
 
 namespace usagi
 {
+class RayCastSubsystem;
 class InputMapping;
 class PerspectiveCamera;
 class ModelViewCameraController;
@@ -18,6 +19,7 @@ class GraphLayoutDemoState
         CameraMan<PerspectiveCamera, ModelViewCameraController>;
     ModelCameraMan *mCameraElement = nullptr;
     InputMapping *mInputMapping = nullptr;
+    RayCastSubsystem *mRayCast = nullptr;
 
 public:
     GraphLayoutDemoState(

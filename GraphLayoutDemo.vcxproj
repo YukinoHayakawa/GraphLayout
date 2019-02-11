@@ -14,12 +14,16 @@
     <ClCompile Include="GraphEditor.cpp" />
     <ClCompile Include="GraphLayoutDemoState.cpp" />
     <ClCompile Include="GraphLayoutDemo.cpp" />
+    <ClCompile Include="GraphLayoutSubsystem.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GraphEditor.hpp" />
     <ClInclude Include="GraphLayoutDemoState.hpp" />
     <ClInclude Include="GraphLayoutDemo.hpp" />
+    <ClInclude Include="GraphLayoutSubsystem.hpp" />
+    <ClInclude Include="GraphVertex.hpp" />
+    <ClInclude Include="GraphVertexComponent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Usagi\Usagi\Usagi.vcxproj">
