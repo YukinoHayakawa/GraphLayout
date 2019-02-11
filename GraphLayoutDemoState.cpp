@@ -14,6 +14,8 @@
 #include <Usagi/Utility/Functional.hpp>
 #include <Usagi/Camera/Controller/ModelViewCameraController.hpp>
 #include <Usagi/Runtime/Graphics/Swapchain.hpp>
+#include <Usagi/Runtime/Window/Window.hpp>
+#include <Usagi/Camera/CameraSample.hpp>
 
 #include "GraphEditor.hpp"
 
@@ -44,7 +46,7 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
         mGame->mainWindow()->window,
         input_manager->virtualKeyboard(),
         input_manager->virtualMouse()
-        );
+    );
     imgui->setSizeFunctionsFromRenderWindow(mGame->mainWindow());
 
     // input mapping
@@ -70,15 +72,17 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
     // graph editor
     mInputMapping->addActionGroup("GraphEditorUI");
     addChild<GraphEditor>("GraphEditor");
+
+    addComponent(this);
 }
 
 void usagi::GraphLayoutDemoState::update(const Clock &clock)
 {
     // todo better way?
     mCameraElement->camera()->setPerspective(
+        mGame->mainWindow()->window->size().cast<float>(),
         degreesToRadians(90.f),
-        mGame->mainWindow()->swapchain->aspectRatio(),
-        0.5f, 100.f);
+        mGame->mainWindow()->swapchain->aspectRatio(), 0.5f, 100.f);
 
     GraphicalGameState::update(clock);
 }
@@ -87,4 +91,19 @@ void usagi::GraphLayoutDemoState::resume()
 {
     mInputMapping->actionGroup("GraphEditorUI")->activate();
     mInputMapping->actionGroup("Camera")->activate();
+}
+
+void usagi::GraphLayoutDemoState::draw(dd::ContextHandle ctx)
+{
+    auto cur = mGame->runtime()->inputManager()->virtualMouse()->
+        cursorPositionInActiveWindow();
+    CameraSample s;
+    s.screen = cur;
+    auto ray =
+        mCameraElement->cameraController()->transform()->localToWorld() *
+         mCameraElement->camera()->generateRay(s);
+    Vector3f to =(ray.origin + 10 * ray.direction);
+    float color[] = { 1.f, 1.f, 0.f };
+    dd::sphere(ctx, to.data(), color, 0.1f);
+    // dd::line(ctx, ray.origin.data(), );
 }
