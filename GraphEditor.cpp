@@ -1,10 +1,14 @@
 ﻿#include "GraphEditor.hpp"
 
+#include <fmt/format.h>
 #include <Usagi/Utility/Functional.hpp>
 #include <Usagi/Sampler/RandomSampler.hpp>
 #include <Usagi/Extension/ImGui/ImGui.hpp>
-#include <imgui/imgui_internal.h>
 #include <Usagi/Interactive/InputMapping.hpp>
+#include <imgui/imgui_internal.h>
+#include <Usagi/Geometry/GeometryComponent.hpp>
+#include <Usagi/Geometry/Shape/Common/Sphere.hpp>
+#include <Usagi/Extension/DebugDraw/DelegatedDebugDrawComponent.hpp>
 
 void usagi::GraphEditor::drawEditor(const Clock &clock)
 {
@@ -74,19 +78,40 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
 void usagi::GraphEditor::generateGraph()
 {
     RandomSampler s;
-    mGraph.vertices.clear();
-    mGraph.vertices.reserve(mVertexCount);
-    mGraph.edges.clear();
+    // mGraph.vertices.clear();
+    // mGraph.vertices.reserve(mVertexCount);
+    // mGraph.edges.clear();
+    //
+    // for(int i = 0; i < mVertexCount; ++i)
+    // {
+    //     mGraph.vertices.push_back({ s.next3D(), Vector3f::Zero() });
+    //     for(int j = 0; j < mEdgeCount; ++j)
+    //     {
+    //         const auto i2 = (i + j) % mVertexCount;
+    //         if(i != i2 && mD(mRng) < mEdgeConnectP)
+    //             mGraph.edges.insert({ i, i2 });
+    //     }
+    // }
+
+    removeChild(mVertexRoot);
+    mVertexRoot = addChild("Vertices");
 
     for(int i = 0; i < mVertexCount; ++i)
     {
-        mGraph.vertices.push_back({ s.next3D(), Vector3f::Zero() });
-        for(int j = 0; j < mEdgeCount; ++j)
-        {
-            const auto i2 = (i + j) % mVertexCount;
-            if(i != i2 && mD(mRng) < mEdgeConnectP)
-                mGraph.edges.insert({ i, i2 });
-        }
+        auto v = mVertexRoot->addChild(fmt::format("Vertex{}", i));
+        auto sphere = std::make_shared<Sphere>(
+            s.next3D() * 5, s.next1D()
+        );
+        v->addComponent<GeometryComponent>(sphere);
+        v->addComponent<DelegatedDebugDrawComponent>(
+            [=](dd::ContextHandle ctx) {
+                float color[] = { 1, 1, 0 };
+                dd::sphere(ctx,
+                    sphere->center().data(),
+                    color,
+                    sphere->radius()
+                );
+            });
     }
 }
 
