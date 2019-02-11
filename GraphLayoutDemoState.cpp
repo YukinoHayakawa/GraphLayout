@@ -65,9 +65,10 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
         ));
 
     auto cam_actions = mInputMapping->addActionGroup("Camera");
-    cam_actions->setAnalogAction2DHandler("Rotate", partial_apply(
-        &ModelViewCameraController::rotate,
-        mCameraElement->cameraController()));
+    cam_actions->setAnalogAction2DHandler("Rotate", [this](Vector2f value) {
+        if(mGame->runtime()->inputManager()->virtualMouse()->isButtonPressed(MouseButtonCode::LEFT))
+            mCameraElement->cameraController()->rotate(-value);
+    });
     cam_actions->bindMouseRelativeMovement("Rotate");
 
     // ray cast
@@ -94,7 +95,7 @@ void usagi::GraphLayoutDemoState::update(const Clock &clock)
 void usagi::GraphLayoutDemoState::resume()
 {
     mInputMapping->actionGroup("GraphEditorUI")->activate();
-    // mInputMapping->actionGroup("Camera")->activate();
+    mInputMapping->actionGroup("Camera")->activate();
 }
 
 void usagi::GraphLayoutDemoState::draw(dd::ContextHandle ctx)
