@@ -7,20 +7,17 @@
 #include <Usagi/Extension/DebugDraw/DebugDrawComponent.hpp>
 #include <Usagi/Interactive/InputComponent.hpp>
 
-#include <GraphLayout/Graph/SimplePointGraph.hpp>
 #include <GraphLayout/Spring/SimpleSpring.hpp>
+#include <GraphLayoutDemo/ElementGraph/ElementBasedPointGraph.hpp>
 
 namespace usagi
 {
-class ElementBasedPointGraph;
-
 class GraphEditor
     : public PredefinedElement<
         DelegatedImGuiComponent,
         InputComponent
     >, public DebugDrawComponent
 {
-    SimplePointGraph mGraph;
     float mVertexRadius = 10;
     float mVertexColor[4] = { 1, 1, 1, 1 };
     float mEdgeColor[4] = { 1, 1, 0.5, 1 };
@@ -33,9 +30,9 @@ class GraphEditor
     std::uniform_real_distribution<float> mD { 0, 1 };
 
     Vector2f mOffset = { 1920, 1080 };
-    SimpleSpring<SimplePointGraph> mLayout { mGraph };
+    ElementBasedPointGraph *mGraph = nullptr;
+    SimpleSpring<ElementBasedPointGraph> mLayout;
 
-    ElementBasedPointGraph *mGraph2 = nullptr;
 
     void drawEditor(const Clock &clock);
     void generateGraph();

@@ -4,39 +4,23 @@
 #include <Usagi/Sampler/RandomSampler.hpp>
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <Usagi/Interactive/InputMapping.hpp>
-#include <imgui/imgui_internal.h>
 #include <Usagi/Extension/DebugDraw/DelegatedDebugDrawComponent.hpp>
-#include <GraphLayoutDemo/ElementGraph/ElementBasedPointGraph.hpp>
+
+template <>
+struct usagi::ElementBasedPointGraph::Traits::property_accessor<usagi::ForcePropertyTag>
+{
+    // todo per graph storage
+    inline static std::unordered_map<Element*, Vector3f> forces;
+
+    auto & operator()(vertex_iterator_t i)
+    {
+        return forces[i->get()];
+    }
+};
 
 void usagi::GraphEditor::drawEditor(const Clock &clock)
 {
     using namespace ImGui;
-
-    auto &draw_list = GetCurrentContext()->OverlayDrawList;
-    draw_list.Flags &= ~ImDrawListFlags_AntiAliasedFill;
-    draw_list.Flags &= ~ImDrawListFlags_AntiAliasedLines;
-
-    /*const auto im = [this](const Vector3f &v) {
-        const auto t = v * mScale + mOffset;
-        return ImVec2 { t.x(), t.y() };
-    };
-
-    for(auto &&v : mGraph.vertices)
-    {
-        draw_list.AddCircleFilled(
-            im(v.position), mVertexRadius,
-            ColorConvertFloat4ToU32((ImVec4&)mVertexColor),
-            5
-        );
-    }
-    for(auto &&e : mGraph.edges)
-    {
-        draw_list.AddLine(
-            im(mGraph.vertices[e.first].position),
-            im(mGraph.vertices[e.second].position),
-            ColorConvertFloat4ToU32((ImVec4&)mEdgeColor)
-        );
-    }*/
 
     if(Begin("Graph Editor"))
     {
@@ -76,32 +60,19 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
 void usagi::GraphEditor::generateGraph()
 {
     RandomSampler s;
-    // mGraph.vertices.clear();
-    // mGraph.vertices.reserve(mVertexCount);
-    // mGraph.edges.clear();
-    //
-    // for(int i = 0; i < mVertexCount; ++i)
-    // {
-    //     mGraph.vertices.push_back({ s.next3D(), Vector3f::Zero() });
-    //     for(int j = 0; j < mEdgeCount; ++j)
-    //     {
-    //         const auto i2 = (i + j) % mVertexCount;
-    //         if(i != i2 && mD(mRng) < mEdgeConnectP)
-    //             mGraph.edges.insert({ i, i2 });
-    //     }
-    // }
 
-    removeChild(mGraph2);
-    mGraph2 = addChild<ElementBasedPointGraph>("Graph");
+    removeChild(mGraph);
+    mGraph = addChild<ElementBasedPointGraph>("Graph");
+    mLayout = { mGraph };
 
     for(int i = 0; i < mVertexCount; ++i)
     {
-        mGraph2->addVertex(s.next3D() * 5);
+        mGraph->addVertex(s.next3D() * 5);
         for(int j = 0; j < i; ++j)
         {
             assert(j != i);
             if(mD(mRng) < mEdgeConnectP)
-                mGraph2->addEdge(i, j);
+                mGraph->addEdge(i, j);
         }
     }
 }
@@ -151,17 +122,4 @@ void usagi::GraphEditor::draw(dd::ContextHandle ctx)
 
     const Matrix4f transform = Matrix4f::Identity();
     dd::axisTriad(ctx, transform.data(), 0.5, 5);
-
-    // for(auto &&v : mGraph.vertices)
-    // {
-    //     dd::point(ctx, v.position.data(), mVertexColor, 10);
-    // }
-    // for(auto &&e : mGraph.edges)
-    // {
-    //     dd::line(ctx,
-    //         mGraph.vertices[e.first].position.data(),
-    //         mGraph.vertices[e.second].position.data(),
-    //         mEdgeColor
-    //     );
-    // }
 }
