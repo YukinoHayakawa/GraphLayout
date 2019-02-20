@@ -31,7 +31,10 @@ struct SimpleSpring
      *
      */
 
-    Graph &mGraph;
+    using vector_t = typename GraphTraits::vector_t;
+    using vector_traits_t = typename GraphTraits::vector_traits_t;
+
+    Graph *mGraph;
     GraphTraits mTraits;
 
     // spring force constant
@@ -43,7 +46,9 @@ struct SimpleSpring
     // update rate
     float c4 = 0.1f;
 
-    SimpleSpring(Graph &graph)
+    SimpleSpring() = default;
+
+    SimpleSpring(Graph *graph)
         : mGraph(graph)
     {
     }
@@ -65,8 +70,8 @@ struct SimpleSpring
         for(; i != end; ++i)
         {
             // each vertex is affected by all other vertices
-            typename GraphTraits::vector_t force;
-            set_zeros(force);
+            vector_t force;
+            vector_traits_t().set_zeros(force);
             auto other_i = mTraits.vertex_begin(mGraph);
             auto other_end = mTraits.vertex_end(mGraph);
             for(; other_i != other_end; ++other_i)
@@ -77,8 +82,8 @@ struct SimpleSpring
                 auto &&p1 = mTraits.position(other_i);
                 // attractive force direction
                 const auto dist = p1 - p0;
-                const auto dir = normalized(dist);
-                const auto l = length(dist);
+                const auto dir = vector_traits_t().normalized(dist);
+                const auto l = vector_traits_t().length(dist);
                 assert(l > 0);
 
                 // adjacent: edge = logarithmic springs

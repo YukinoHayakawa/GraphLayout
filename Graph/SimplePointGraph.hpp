@@ -60,25 +60,10 @@ struct SimplePointGraphTraits
     struct property_accessor;
 };
 
-inline auto length(const SimplePointGraphTraits::vector_t &v)
-{
-    return v.norm();
-}
-
-inline auto normalized(const SimplePointGraphTraits::vector_t &v)
-{
-    return v.normalized();
-}
-
-inline void set_zeros(SimplePointGraphTraits::vector_t &v)
-{
-    v = SimplePointGraphTraits::vector_t::Zero();
-}
-
 template <>
 struct SimplePointGraphTraits::property_accessor<struct ForcePropertyTag>
 {
-    auto & operator()(
+    decltype(auto) operator()(
         const SimplePointGraph::vertex_container_t::iterator &v) const
     {
         return v->force;

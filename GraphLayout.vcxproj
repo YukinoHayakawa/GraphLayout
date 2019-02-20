@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Graph\SimplePointGraph.hpp" />
+    <ClInclude Include="Graph\VectorTraits.hpp" />
     <ClInclude Include="Spring\SimpleSpring.hpp" />
   </ItemGroup>
   <ItemGroup>
