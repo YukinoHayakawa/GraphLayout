@@ -12,6 +12,8 @@
 
 namespace usagi
 {
+class ElementBasedPointGraph;
+
 class GraphEditor
     : public PredefinedElement<
         DelegatedImGuiComponent,
@@ -33,7 +35,7 @@ class GraphEditor
     Vector2f mOffset = { 1920, 1080 };
     SimpleSpring<SimplePointGraph> mLayout { mGraph };
 
-    Element *mVertexRoot = nullptr;
+    ElementBasedPointGraph *mGraph2 = nullptr;
 
     void drawEditor(const Clock &clock);
     void generateGraph();

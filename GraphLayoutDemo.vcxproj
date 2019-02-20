@@ -15,15 +15,16 @@
     <ClCompile Include="Demo\GraphEditor.cpp" />
     <ClCompile Include="Demo\GraphLayoutDemoState.cpp" />
     <ClCompile Include="Demo\GraphLayoutDemo.cpp" />
-    <ClCompile Include="ElementGraph\GraphLayoutSubsystem.cpp" />
+    <ClCompile Include="ElementGraph\GraphEdge.cpp" />
     <ClCompile Include="Demo\main.cpp" />
+    <ClCompile Include="ElementGraph\GraphVertex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ElementGraph\ElementBasedPointGraph.hpp" />
     <ClInclude Include="Demo\GraphEditor.hpp" />
     <ClInclude Include="Demo\GraphLayoutDemoState.hpp" />
     <ClInclude Include="Demo\GraphLayoutDemo.hpp" />
-    <ClInclude Include="ElementGraph\GraphLayoutSubsystem.hpp" />
+    <ClInclude Include="ElementGraph\GraphEdge.hpp" />
     <ClInclude Include="ElementGraph\GraphVertex.hpp" />
     <ClInclude Include="ElementGraph\GraphVertexComponent.hpp" />
     <ClInclude Include="ElementGraph\PositionComponent.hpp" />

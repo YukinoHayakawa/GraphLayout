@@ -5,9 +5,8 @@
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <Usagi/Interactive/InputMapping.hpp>
 #include <imgui/imgui_internal.h>
-#include <Usagi/Geometry/ShapeComponent.hpp>
-#include <Usagi/Geometry/Shape/Common/Sphere.hpp>
 #include <Usagi/Extension/DebugDraw/DelegatedDebugDrawComponent.hpp>
+#include <GraphLayoutDemo/ElementGraph/ElementBasedPointGraph.hpp>
 
 void usagi::GraphEditor::drawEditor(const Clock &clock)
 {
@@ -92,25 +91,12 @@ void usagi::GraphEditor::generateGraph()
     //     }
     // }
 
-    removeChild(mVertexRoot);
-    mVertexRoot = addChild("Vertices");
+    removeChild(mGraph2);
+    mGraph2 = addChild<ElementBasedPointGraph>("Graph");
 
     for(int i = 0; i < mVertexCount; ++i)
     {
-        auto v = mVertexRoot->addChild(fmt::format("Vertex{}", i));
-        auto sphere = std::make_shared<Sphere>(
-            s.next3D() * 5, 0.1f
-        );
-        v->addComponent<ShapeComponent>(sphere);
-        v->addComponent<DelegatedDebugDrawComponent>(
-            [=](dd::ContextHandle ctx) {
-                float color[] = { 1, 1, 0 };
-                dd::point(ctx,
-                    sphere->center().data(),
-                    color,
-                    sphere->radius()
-                );
-            });
+        mGraph2->addVertex(s.next3D() * 5);
         for(int j = 0; j < mEdgeCount; ++j)
         {
             const auto i2 = (i + j) % mVertexCount;
@@ -166,16 +152,16 @@ void usagi::GraphEditor::draw(dd::ContextHandle ctx)
     const Matrix4f transform = Matrix4f::Identity();
     dd::axisTriad(ctx, transform.data(), 0.5, 5);
 
-    for(auto &&v : mGraph.vertices)
-    {
-        dd::point(ctx, v.position.data(), mVertexColor, 10);
-    }
-    for(auto &&e : mGraph.edges)
-    {
-        dd::line(ctx,
-            mGraph.vertices[e.first].position.data(),
-            mGraph.vertices[e.second].position.data(),
-            mEdgeColor
-        );
-    }
+    // for(auto &&v : mGraph.vertices)
+    // {
+    //     dd::point(ctx, v.position.data(), mVertexColor, 10);
+    // }
+    // for(auto &&e : mGraph.edges)
+    // {
+    //     dd::line(ctx,
+    //         mGraph.vertices[e.first].position.data(),
+    //         mGraph.vertices[e.second].position.data(),
+    //         mEdgeColor
+    //     );
+    // }
 }

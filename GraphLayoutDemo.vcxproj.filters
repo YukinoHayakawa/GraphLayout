@@ -18,9 +18,6 @@
     <ClCompile Include="ElementGraph\ElementBasedPointGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ElementGraph\GraphLayoutSubsystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Demo\GraphEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,6 +28,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Demo\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementGraph\GraphVertex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ElementGraph\GraphEdge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -44,9 +47,6 @@
     <ClInclude Include="ElementGraph\GraphVertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ElementGraph\GraphLayoutSubsystem.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Demo\GraphEditor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,6 +57,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ElementGraph\PositionComponent.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementGraph\GraphEdge.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
