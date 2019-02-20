@@ -14,6 +14,9 @@
     <ClInclude Include="Graph\SimplePointGraph.hpp" />
     <ClInclude Include="Spring\SimpleSpring.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CreateLib.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{2578CFA4-1FEC-48AC-9F77-C6FAC4733710}</ProjectGuid>
@@ -41,11 +44,11 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)Includes\Usagi.props" />
+    <Import Project="$(SolutionDir)Includes\University.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)Includes\Usagi.props" />
+    <Import Project="$(SolutionDir)Includes\University.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
