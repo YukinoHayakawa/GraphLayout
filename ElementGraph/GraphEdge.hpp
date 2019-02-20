@@ -1,25 +1,26 @@
 ﻿#pragma once
 
 #include <Usagi/Core/PredefinedElement.hpp>
+#include <Usagi/Extension/DebugDraw/DebugDrawComponent.hpp>
 
 namespace usagi
 {
 class GraphVertex;
 
-class GraphEdge : public PredefinedElement<>
+class GraphEdge
+    : public PredefinedElement<
+    >, public DebugDrawComponent
 {
 public:
-    const GraphVertex *v0 = nullptr, *v1 = nullptr;
+    GraphVertex *const v0 = nullptr;
+    GraphVertex *const v1 = nullptr;
 
     GraphEdge(
         Element *parent,
         std::string name,
-        const GraphVertex *v0,
-        const GraphVertex *v1)
-        : PredefinedElement(parent, std::move(name))
-        , v0(v0)
-        , v1(v1)
-    {
-    }
+        GraphVertex *v0,
+        GraphVertex *v1);
+
+    void draw(dd::ContextHandle ctx) override;
 };
 }

@@ -97,11 +97,11 @@ void usagi::GraphEditor::generateGraph()
     for(int i = 0; i < mVertexCount; ++i)
     {
         mGraph2->addVertex(s.next3D() * 5);
-        for(int j = 0; j < mEdgeCount; ++j)
+        for(int j = 0; j < i; ++j)
         {
-            const auto i2 = (i + j) % mVertexCount;
-            if(i != i2 && mD(mRng) < mEdgeConnectP)
-                mGraph.edges.insert({ i, i2 });
+            assert(j != i);
+            if(mD(mRng) < mEdgeConnectP)
+                mGraph2->addEdge(i, j);
         }
     }
 }

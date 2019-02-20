@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <Usagi/Core/PredefinedElement.hpp>
-#include <Usagi/Extension/DebugDraw/DelegatedDebugDrawComponent.hpp>
+#include <Usagi/Extension/DebugDraw/DebugDrawComponent.hpp>
 #include <Usagi/Geometry/ShapeComponent.hpp>
 #include <Usagi/Geometry/RayCastComponent.hpp>
 
@@ -15,11 +15,10 @@ class GraphVertex
         ShapeComponent,
         RayCastComponent,
         PositionComponent,
-        GraphVertexComponent,
-        DelegatedDebugDrawComponent
-    >
+        GraphVertexComponent
+    >, public DebugDrawComponent
 {
-    void draw(dd::ContextHandle ctx);
+    void draw(dd::ContextHandle ctx) override;
 
 public:
     GraphVertex(Element *parent, std::string name, const Vector3f &position);

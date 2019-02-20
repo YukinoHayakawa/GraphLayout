@@ -1,6 +1,5 @@
 ﻿#include "GraphVertex.hpp"
 
-#include <Usagi/Utility/Functional.hpp>
 #include <Usagi/Geometry/Shape/Common/Sphere.hpp>
 
 void usagi::GraphVertex::draw(dd::ContextHandle ctx)
@@ -20,7 +19,7 @@ usagi::GraphVertex::GraphVertex(
     : PredefinedElement(parent, std::move(name))
 {
     comp<PositionComponent>()->position = position;
-    comp<DelegatedDebugDrawComponent>()->draw_func =
-        partial_apply(&GraphVertex::draw, this);
     comp<ShapeComponent>()->shape = std::make_shared<Sphere>(position, 0.25f);
+
+    addComponent(this);
 }

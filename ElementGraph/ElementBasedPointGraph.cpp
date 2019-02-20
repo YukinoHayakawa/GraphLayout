@@ -16,17 +16,19 @@ usagi::ElementBasedPointGraph::ElementBasedPointGraph(
 void usagi::ElementBasedPointGraph::addVertex(const Vector3f &position)
 {
     mVertexRoot->addChild<GraphVertex>(
-        fmt::format("{}", mChildren.size()),
+        fmt::format("{}", mVertexRoot->childrenCount()),
         position
     );
 }
 
 void usagi::ElementBasedPointGraph::addEdge(std::size_t v0, std::size_t v1)
 {
+    auto c0 = mVertexRoot->childByIndex(v0);
+    auto c1 = mVertexRoot->childByIndex(v1);
     mEdgeRoot->addChild<GraphEdge>(
-        fmt::format("{}-{}", v0, v1),
-        mChildren[v0]->as<GraphVertex>(),
-        mChildren[v1]->as<GraphVertex>()
+        fmt::format("{}->{}", v0, v1),
+        c0->as<GraphVertex>(),
+        c1->as<GraphVertex>()
     );
-    mEdges.insert({ mChildren[v0].get(), mChildren[v1].get() });
+    mEdges.insert({ c0, c1 });
 }
