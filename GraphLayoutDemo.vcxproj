@@ -11,19 +11,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphEditor.cpp" />
-    <ClCompile Include="GraphLayoutDemoState.cpp" />
-    <ClCompile Include="GraphLayoutDemo.cpp" />
-    <ClCompile Include="GraphLayoutSubsystem.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ElementGraph\ElementBasedPointGraph.cpp" />
+    <ClCompile Include="Demo\GraphEditor.cpp" />
+    <ClCompile Include="Demo\GraphLayoutDemoState.cpp" />
+    <ClCompile Include="Demo\GraphLayoutDemo.cpp" />
+    <ClCompile Include="ElementGraph\GraphLayoutSubsystem.cpp" />
+    <ClCompile Include="Demo\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GraphEditor.hpp" />
-    <ClInclude Include="GraphLayoutDemoState.hpp" />
-    <ClInclude Include="GraphLayoutDemo.hpp" />
-    <ClInclude Include="GraphLayoutSubsystem.hpp" />
-    <ClInclude Include="GraphVertex.hpp" />
-    <ClInclude Include="GraphVertexComponent.hpp" />
+    <ClInclude Include="ElementGraph\ElementBasedPointGraph.hpp" />
+    <ClInclude Include="Demo\GraphEditor.hpp" />
+    <ClInclude Include="Demo\GraphLayoutDemoState.hpp" />
+    <ClInclude Include="Demo\GraphLayoutDemo.hpp" />
+    <ClInclude Include="ElementGraph\GraphLayoutSubsystem.hpp" />
+    <ClInclude Include="ElementGraph\GraphVertex.hpp" />
+    <ClInclude Include="ElementGraph\GraphVertexComponent.hpp" />
+    <ClInclude Include="ElementGraph\PositionComponent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Usagi\Usagi\Usagi.vcxproj">
@@ -60,11 +63,11 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)Includes\Usagi.props" />
+    <Import Project="$(SolutionDir)Includes\University.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(SolutionDir)Includes\Usagi.props" />
+    <Import Project="$(SolutionDir)Includes\University.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />

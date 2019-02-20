@@ -15,39 +15,48 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="ElementGraph\ElementBasedPointGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphLayoutDemoState.cpp">
+    <ClCompile Include="ElementGraph\GraphLayoutSubsystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphLayoutDemo.cpp">
+    <ClCompile Include="Demo\GraphEditor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphEditor.cpp">
+    <ClCompile Include="Demo\GraphLayoutDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GraphLayoutSubsystem.cpp">
+    <ClCompile Include="Demo\GraphLayoutDemoState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Demo\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GraphLayoutDemoState.hpp">
+    <ClInclude Include="ElementGraph\ElementBasedPointGraph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphLayoutDemo.hpp">
+    <ClInclude Include="ElementGraph\GraphVertexComponent.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphEditor.hpp">
+    <ClInclude Include="ElementGraph\GraphVertex.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphVertexComponent.hpp">
+    <ClInclude Include="ElementGraph\GraphLayoutSubsystem.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphLayoutSubsystem.hpp">
+    <ClInclude Include="Demo\GraphEditor.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphVertex.hpp">
+    <ClInclude Include="Demo\GraphLayoutDemo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Demo\GraphLayoutDemoState.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ElementGraph\PositionComponent.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

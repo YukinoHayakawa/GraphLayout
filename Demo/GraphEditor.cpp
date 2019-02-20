@@ -1,12 +1,11 @@
 ﻿#include "GraphEditor.hpp"
 
-#include <fmt/format.h>
 #include <Usagi/Utility/Functional.hpp>
 #include <Usagi/Sampler/RandomSampler.hpp>
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <Usagi/Interactive/InputMapping.hpp>
 #include <imgui/imgui_internal.h>
-#include <Usagi/Geometry/GeometryComponent.hpp>
+#include <Usagi/Geometry/ShapeComponent.hpp>
 #include <Usagi/Geometry/Shape/Common/Sphere.hpp>
 #include <Usagi/Extension/DebugDraw/DelegatedDebugDrawComponent.hpp>
 
@@ -100,18 +99,24 @@ void usagi::GraphEditor::generateGraph()
     {
         auto v = mVertexRoot->addChild(fmt::format("Vertex{}", i));
         auto sphere = std::make_shared<Sphere>(
-            s.next3D() * 5, s.next1D()
+            s.next3D() * 5, 0.1f
         );
-        v->addComponent<GeometryComponent>(sphere);
+        v->addComponent<ShapeComponent>(sphere);
         v->addComponent<DelegatedDebugDrawComponent>(
             [=](dd::ContextHandle ctx) {
                 float color[] = { 1, 1, 0 };
-                dd::sphere(ctx,
+                dd::point(ctx,
                     sphere->center().data(),
                     color,
                     sphere->radius()
                 );
             });
+        for(int j = 0; j < mEdgeCount; ++j)
+        {
+            const auto i2 = (i + j) % mVertexCount;
+            if(i != i2 && mD(mRng) < mEdgeConnectP)
+                mGraph.edges.insert({ i, i2 });
+        }
     }
 }
 

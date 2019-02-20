@@ -7,8 +7,8 @@
 #include <Usagi/Extension/DebugDraw/DebugDrawComponent.hpp>
 #include <Usagi/Interactive/InputComponent.hpp>
 
-#include "../GraphLayout/Graph/SimplePointGraph.hpp"
-#include "../GraphLayout/Spring/SimpleSpring.hpp"
+#include <GraphLayout/Graph/SimplePointGraph.hpp>
+#include <GraphLayout/Spring/SimpleSpring.hpp>
 
 namespace usagi
 {
