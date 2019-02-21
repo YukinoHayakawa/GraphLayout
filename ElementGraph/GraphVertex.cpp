@@ -10,6 +10,10 @@ void usagi::GraphVertex::draw(dd::ContextHandle ctx)
         color,
         10
     );
+    // todo sync mechanism
+    static_cast<Sphere*>(comp<ShapeComponent>()->shape.get())->setCenter(
+        comp<PositionComponent>()->position
+    );
 }
 
 usagi::GraphVertex::GraphVertex(
