@@ -33,23 +33,32 @@ struct SimpleSpring
 
     using vector_t = typename GraphTraits::vector_t;
     using vector_traits_t = typename GraphTraits::vector_traits_t;
+    using ForceAccessor = typename GraphTraits::template property_accessor
+        <ForcePropertyTag>;
 
     Graph *mGraph;
     GraphTraits mTraits;
+    ForceAccessor force_accessor;
 
-    // spring force constant
-    float c1 = 2;
-    // original (unloaded/stretched/compressed) spring length
-    float c2 = 1;
-    // repel factor
-    float c3 = 1;
-    // update rate
-    float c4 = 0.1f;
+    struct Parameters
+    {
+        // spring force constant
+        float c1 = 2;
+        // original (unloaded/stretched/compressed) spring length
+        float c2 = 1;
+        // repel factor
+        float c3 = 1;
+        // update rate
+        float c4 = 0.1f;
+    } *param = nullptr;
 
     SimpleSpring() = default;
 
-    SimpleSpring(Graph *graph)
+    SimpleSpring(
+        Graph *graph,
+        Parameters *param)
         : mGraph(graph)
+        , param(param)
     {
     }
 
@@ -62,9 +71,6 @@ struct SimpleSpring
 
         auto i = mTraits.vertex_begin(mGraph);
         auto end = mTraits.vertex_end(mGraph);
-
-        using ForceAccessor = typename GraphTraits::template property_accessor
-            <ForcePropertyTag>;
 
         // calculate the force acting on each vertex
         for(; i != end; ++i)
@@ -93,15 +99,14 @@ struct SimpleSpring
                     // therefore, when l (real spring length is longer than
                     // c2 (steady spring length, the force is attractive.
                     // otherwise it is repulsive.
-                    force += dir * c1 * std::log(l / c2);
+                    force += dir * param->c1 * std::log(l / param->c2);
                 }
                 // nonadjacent: repulsive force (always)
                 else
                 {
-                    force -= dir * c3 / std::sqrt(l);
+                    force -= dir * param->c3 / std::sqrt(l);
                 }
             }
-            ForceAccessor force_accessor;
             force_accessor(i) = force;
         }
 
@@ -110,7 +115,7 @@ struct SimpleSpring
         for(; i != end; ++i)
         {
             auto &&p = mTraits.position(i);
-            p += c4 * ForceAccessor()(i);
+            p += param->c4 * force_accessor(i);
         }
 
         // draw a filled circle for each vertex;

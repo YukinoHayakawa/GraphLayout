@@ -63,7 +63,7 @@ struct SimplePointGraphTraits
 template <>
 struct SimplePointGraphTraits::property_accessor<struct ForcePropertyTag>
 {
-    decltype(auto) operator()(
+    auto & operator()(
         const SimplePointGraph::vertex_container_t::iterator &v) const
     {
         return v->force;
