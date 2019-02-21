@@ -66,7 +66,8 @@ usagi::GraphLayoutDemoState::GraphLayoutDemoState(
 
     auto cam_actions = mInputMapping->addActionGroup("Camera");
     cam_actions->setAnalogAction2DHandler("Rotate", [this](Vector2f value) {
-        if(mGame->runtime()->inputManager()->virtualMouse()->isButtonPressed(MouseButtonCode::LEFT))
+        if(mGame->runtime()->inputManager()->virtualMouse()->isButtonPressed(
+            MouseButtonCode::RIGHT))
             mCameraElement->cameraController()->rotate(-value);
     });
     cam_actions->bindMouseRelativeMovement("Rotate");
@@ -106,7 +107,7 @@ void usagi::GraphLayoutDemoState::draw(dd::ContextHandle ctx)
     s.screen = cur;
     auto ray =
         mCameraElement->cameraController()->transform()->localToWorld() *
-         mCameraElement->camera()->generateRay(s);
+        mCameraElement->camera()->generateRay(s);
     auto x = mRayCast->intersect(ray);
     if(x.has_value())
     {
