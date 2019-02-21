@@ -6,18 +6,6 @@
 #include <Usagi/Interactive/InputMapping.hpp>
 #include <Usagi/Extension/DebugDraw/DelegatedDebugDrawComponent.hpp>
 
-template <>
-struct usagi::ElementBasedPointGraph::Traits::property_accessor<usagi::ForcePropertyTag>
-{
-    // todo per graph storage
-    inline static std::unordered_map<Element*, Vector3f> forces;
-
-    auto & operator()(vertex_iterator_t i)
-    {
-        return forces[i->get()];
-    }
-};
-
 void usagi::GraphEditor::drawEditor(const Clock &clock)
 {
     using namespace ImGui;
@@ -37,13 +25,13 @@ void usagi::GraphEditor::drawEditor(const Clock &clock)
             mLayout.update();
         }
 
-        DragFloat("c1 (spring constant)", &mLayout.c1,
+        DragFloat("c1 (spring constant)", &mParameters.c1,
             0.1f, 0.1f, 1000.f);
-        DragFloat("c2 (original spring length)", &mLayout.c2,
+        DragFloat("c2 (original spring length)", &mParameters.c2,
             0.1f, 0.1f, 1000.f);
-        DragFloat("c3 (repel factor)", &mLayout.c3,
+        DragFloat("c3 (repel factor)", &mParameters.c3,
             0.1f, 0.1f, 1000.f);
-        DragFloat("c4 (update rate)", &mLayout.c4,
+        DragFloat("c4 (update rate)", &mParameters.c4,
             0.1f, 0.1f, 1000.f);
 
         DragFloat("Edge Connect Possibility", &mEdgeConnectP,
@@ -63,7 +51,7 @@ void usagi::GraphEditor::generateGraph()
 
     removeChild(mGraph);
     mGraph = addChild<ElementBasedPointGraph>("Graph");
-    mLayout = { mGraph };
+    mLayout = { mGraph, &mParameters };
 
     for(int i = 0; i < mVertexCount; ++i)
     {

@@ -12,6 +12,17 @@
 
 namespace usagi
 {
+template <>
+struct ElementBasedPointGraph::Traits::property_accessor<ForcePropertyTag>
+{
+    std::unordered_map<Element*, Vector3f> forces;
+
+    auto & operator()(vertex_iterator_t i)
+    {
+        return forces[i->get()];
+    }
+};
+
 class GraphEditor
     : public PredefinedElement<
         DelegatedImGuiComponent,
@@ -31,8 +42,9 @@ class GraphEditor
 
     Vector2f mOffset = { 1920, 1080 };
     ElementBasedPointGraph *mGraph = nullptr;
-    SimpleSpring<ElementBasedPointGraph> mLayout;
-
+    using LayoutAlgorithm = SimpleSpring<ElementBasedPointGraph>;
+    LayoutAlgorithm::Parameters mParameters;
+    LayoutAlgorithm mLayout;
 
     void drawEditor(const Clock &clock);
     void generateGraph();
