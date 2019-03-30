@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Editor\NodeEditorState.cpp" />
     <ClCompile Include="ElementGraph\ElementBasedPointGraph.cpp" />
     <ClCompile Include="Demo\GraphEditor.cpp" />
     <ClCompile Include="Demo\GraphLayoutDemoState.cpp" />
@@ -20,6 +21,7 @@
     <ClCompile Include="ElementGraph\GraphVertex.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Editor\NodeEditorState.hpp" />
     <ClInclude Include="ElementGraph\ElementBasedPointGraph.hpp" />
     <ClInclude Include="Demo\GraphEditor.hpp" />
     <ClInclude Include="Demo\GraphLayoutDemoState.hpp" />

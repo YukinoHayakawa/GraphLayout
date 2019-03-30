@@ -6,6 +6,7 @@
 #include <Usagi/Runtime/Window/Window.hpp>
 
 #include "GraphLayoutDemoState.hpp"
+#include <GraphLayoutDemo/Editor/NodeEditorState.hpp>
 
 // #include "InitState.hpp"
 
@@ -21,6 +22,8 @@ usagi::GraphLayoutDemo::GraphLayoutDemo(std::shared_ptr<Runtime> runtime)
     );
     setupRenderTargets(true);
 
-    mStateManager->pushState<GraphLayoutDemoState>(
-        "GraphLayoutDemoState", this);
+    // mStateManager->pushState<GraphLayoutDemoState>(
+    //     "GraphLayoutDemoState", this);
+    mStateManager->pushState<NodeEditorState>(
+        "NodeEditorState", this);
 }

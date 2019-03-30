@@ -36,6 +36,9 @@
     <ClCompile Include="ElementGraph\GraphEdge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Editor\NodeEditorState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ElementGraph\ElementBasedPointGraph.hpp">
@@ -60,6 +63,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ElementGraph\GraphEdge.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\NodeEditorState.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
