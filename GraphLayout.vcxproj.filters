@@ -24,6 +24,9 @@
     <ClInclude Include="Graph\VectorTraits.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Genetic\GeneticOptimizer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp">
