@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Editor\NodeEditorState.cpp" />
+    <ClCompile Include="Editor\PortBasedGraph.cpp" />
     <ClCompile Include="ElementGraph\ElementBasedPointGraph.cpp" />
     <ClCompile Include="Demo\GraphEditor.cpp" />
     <ClCompile Include="Demo\GraphLayoutDemoState.cpp" />
@@ -22,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Editor\NodeEditorState.hpp" />
+    <ClInclude Include="Editor\PortBasedGraph.hpp" />
     <ClInclude Include="ElementGraph\ElementBasedPointGraph.hpp" />
     <ClInclude Include="Demo\GraphEditor.hpp" />
     <ClInclude Include="Demo\GraphLayoutDemoState.hpp" />

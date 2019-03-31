@@ -5,6 +5,8 @@
 #include <Usagi/Runtime/Input/InputManager.hpp>
 #include <Usagi/Extension/ImGui/ImGuiSubsystem.hpp>
 
+#include "PortBasedGraph.hpp"
+
 usagi::NodeEditorState::NodeEditorState(
     Element *parent,
     std::string name,
@@ -20,5 +22,5 @@ usagi::NodeEditorState::NodeEditorState(
     ));
     imgui->setSizeFunctionsFromRenderWindow(mGame->mainWindow());
 
-    // addChild<...>("...");
+    addChild<PortBasedGraph>("GraphBase");
 }
