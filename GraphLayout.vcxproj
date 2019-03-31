@@ -12,12 +12,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Genetic\GeneticOptimizer.hpp" />
+    <ClInclude Include="Graph\Node.hpp" />
+    <ClInclude Include="Graph\NodeGraph.hpp" />
+    <ClInclude Include="Graph\NodeGraphGeneticTraits.hpp" />
+    <ClInclude Include="Graph\Port.hpp" />
     <ClInclude Include="Graph\SimplePointGraph.hpp" />
     <ClInclude Include="Graph\VectorTraits.hpp" />
     <ClInclude Include="Spring\SimpleSpring.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp" />
+    <ClCompile Include="Graph\Node.cpp" />
+    <ClCompile Include="Graph\NodeGraph.cpp" />
+    <ClCompile Include="Graph\NodeGraphGeneticTraits.cpp" />
+    <ClCompile Include="Graph\Port.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
