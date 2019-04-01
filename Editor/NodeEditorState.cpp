@@ -4,6 +4,7 @@
 #include <Usagi/Runtime/Runtime.hpp>
 #include <Usagi/Runtime/Input/InputManager.hpp>
 #include <Usagi/Extension/ImGui/ImGuiSubsystem.hpp>
+#include <Usagi/Extension/Nuklear/NuklearSubsystem.hpp>
 
 #include "PortBasedGraph.hpp"
 
@@ -21,6 +22,13 @@ usagi::NodeEditorState::NodeEditorState(
         input_manager->virtualMouse()
     ));
     imgui->setSizeFunctionsFromRenderWindow(mGame->mainWindow());
+    const auto nk = addSubsystem("nuklear", std::make_unique<NuklearSubsystem>(
+        mGame,
+        mGame->mainWindow()->window,
+        input_manager->virtualKeyboard(),
+        input_manager->virtualMouse()
+    ));
+    nk->setSizeFunctionsFromRenderWindow(mGame->mainWindow());
 
     addChild<PortBasedGraph>("GraphBase");
 }

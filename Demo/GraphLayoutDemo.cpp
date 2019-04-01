@@ -14,6 +14,7 @@ usagi::GraphLayoutDemo::GraphLayoutDemo(std::shared_ptr<Runtime> runtime)
     : GraphicalGame(std::move(runtime))
 {
     assets()->addChild<FilesystemAssetPackage>("imgui", "Data/imgui");
+    assets()->addChild<FilesystemAssetPackage>("nuklear", "Data/nuklear");
     assets()->addChild<FilesystemAssetPackage>("dd", "Data/debugdraw");
     createMainWindow(
         u8"Graph Layout Demo",
