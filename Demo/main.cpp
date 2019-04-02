@@ -1,12 +1,39 @@
 ﻿#include <Usagi/Runtime/Runtime.hpp>
 
-#include "GraphLayoutDemo.hpp"
+// #include "GraphLayoutDemo.hpp"
+#include <GraphLayout/Genetic/Crossover.hpp>
 // #include <GraphLayout/Genetic/GeneticOptimizer.hpp>
+#include <fmt/printf.h>
+#include <GraphLayout/Genetic/Mutation.hpp>
 
 using namespace usagi;
 
 int main(int argc, char *argv[])
 {
+    std::string a = "aaaaaaaaaaaaaaaa";
+    std::string b = "bbbbbbbbbbbbbbbb";
+
+    genetic::crossover::OnePointCrossover c;
+    std::random_device rd;
+    std::mt19937 gen { rd() };
+    for(int i = 0; i < 1000; ++i)
+    {
+        c(a, b, rd);
+        fmt::print("{} {}\n", a, b);
+    }
+
+    std::vector<float> aa = { 0, 0, 0, 0, 0 };
+
+    genetic::mutation::GaussianMutation<decltype(aa)> gm;
+    std::uniform_real_distribution<> dist(0, 1);
+    for(int i = 0; i < 1000; ++i)
+    {
+        // if(dist(gen) < 0.1)
+            gm(aa, gen);
+        fmt::print("{} {} {} {} {}\n", aa[0], aa[1], aa[2], aa[3], aa[4]);
+    }
+
+    return 0;
     // GeneticOptimizer optimizer;
     // optimizer.graph.nodes.emplace_back();
     // optimizer.graph.nodes.emplace_back();
@@ -38,7 +65,7 @@ int main(int argc, char *argv[])
     //
     // return 0;
 
-    auto runtime = Runtime::create();
+    /*auto runtime = Runtime::create();
     runtime->enableCrashHandler("GraphLayoutDemoCrashDump");
     try
     {
@@ -49,5 +76,5 @@ int main(int argc, char *argv[])
     {
         runtime->displayErrorDialog(e.what());
         throw;
-    }
+    }*/
 }
