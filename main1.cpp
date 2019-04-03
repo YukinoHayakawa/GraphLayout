@@ -30,8 +30,11 @@ struct Fitness2
 
 	value_type operator()(std::vector<value_type> &g)
 	{
-		auto [x, y] = std::tie(g[0], g[1]);
-		return std::sin(x + y) - x * x - y * y;
+		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		constexpr auto func = [](auto a, auto b) {
+			return std::sin(a + b) - a * a - b * b;
+		};
+		return func(a, b) + func(c, d) + func(e, f);
 	}
 };
 
@@ -40,11 +43,16 @@ int main(int argc, char *argv[])
 	GeneticOptimizer<
 		double,
 		Fitness2,
-		parent::TournamentParentSelection<5>,
+		parent::TournamentParentSelection<20>,
 		crossover::OnePointCrossover,
 		mutation::GaussianMutation<std::vector<double>>,
-		replacement::RemoveOldestReplacementPolicy
+		// replacement::ReplaceOldest
+		replacement::ReplaceWorst
 	> optimizer;
+
+	// optimizer.mutation.min = -0.01;
+	// optimizer.mutation.max = 0.01;
+	optimizer.mutation.std_dev = 0.01;
 
 	// init populations
 	std::uniform_real_distribution<> dist(
@@ -55,8 +63,8 @@ int main(int argc, char *argv[])
 	{
 		auto &ind = optimizer.population.emplace_back();
 		ind.birthday = 0;
-		// ind.genotype.insert(ind.genotype.begin(), 6, 0.0);
-		ind.genotype.insert(ind.genotype.begin(), 2, 0.0);
+		ind.genotype.insert(ind.genotype.begin(), 6, 0.0);
+		// ind.genotype.insert(ind.genotype.begin(), 2, 0.0);
 		std::generate(
 			ind.genotype.begin(), ind.genotype.end(),
 			std::bind(dist, optimizer.rng)
@@ -65,7 +73,7 @@ int main(int argc, char *argv[])
 	}
 
 
-	for(int i = 0; i < 1000; ++i)
+	for(int i = 0; i < 1000000; ++i)
 	{
 		auto best_fitness = std::max_element(
 			optimizer.population.begin(),
