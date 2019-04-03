@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
 	// optimizer.mutation.min = -0.01;
 	// optimizer.mutation.max = 0.01;
 	optimizer.mutation.std_dev = 0.01;
+	// optimizer.mutation_rate = 0.1;
 
 	// init populations
 	std::uniform_real_distribution<> dist(
@@ -103,8 +104,9 @@ int main(int argc, char *argv[])
 	}
 
 
-	for(int i = 0; i < 1000000; ++i)
+	for(int i = 1; i < 1000000; ++i)
 	{
+		optimizer.mutation.std_dev = 1000.0 / i;
 		auto best_fitness = std::max_element(
 			optimizer.population.begin(),
 			optimizer.population.end(),
@@ -112,7 +114,7 @@ int main(int argc, char *argv[])
 				return p0.fitness < p1.fitness;
 			});
 
-		fmt::print("{:>4}: {} ({})\n",
+		fmt::print("{:>8}: {} ({})\n",
 			optimizer.year,
 			best_fitness->fitness,
 			fmt::join(
