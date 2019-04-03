@@ -54,8 +54,8 @@ struct GeneticOptimizer
 
 	std::size_t population_size = 100;
 	std::size_t year = 0;
-	double crossover_rate = 0.7;
-	double mutation_rate = 0.1;
+	double crossover_rate = 0.85;
+	double mutation_rate = 0.2;
 
 	auto chooseParents()
 	{
