@@ -38,6 +38,36 @@ struct Fitness2
 	}
 };
 
+
+struct Fitness3
+{
+	using value_type = double;
+
+	value_type operator()(std::vector<value_type> &g)
+	{
+		auto[a, b] = std::tie(g[0], g[1]);
+		constexpr auto func = [](auto a, auto b) {
+			return std::sin(a + b) - a * a - b * b;
+		};
+		return func(a, b);
+	}
+};
+
+// unbounded. cant converge
+struct Fitness4
+{
+	using value_type = double;
+
+	value_type operator()(std::vector<value_type> &g)
+	{
+		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		constexpr auto func = [](auto a, auto b) {
+			return std::sin(a + b) - a * a - b * b;
+		};
+		return func(a, b) * func(c, d) * func(e, f);
+	}
+};
+
 int main(int argc, char *argv[])
 {
 	GeneticOptimizer<
