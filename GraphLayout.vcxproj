@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -11,17 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Genetic\Crossover.hpp" />
+    <ClInclude Include="Genetic\GeneticOptimizationSystem.hpp" />
     <ClInclude Include="Genetic\GeneticOptimizer.hpp" />
-    <ClInclude Include="Graph\NodeGraph.hpp" />
-    <ClInclude Include="Graph\NodeGraphGeneticTraits.hpp" />
-    <ClInclude Include="Graph\SimplePointGraph.hpp" />
-    <ClInclude Include="Graph\VectorTraits.hpp" />
+    <ClInclude Include="Genetic\Mutation.hpp" />
+    <ClInclude Include="Genetic\ParentSelection.hpp" />
+    <ClInclude Include="Genetic\Replacement.hpp" />
     <ClInclude Include="Spring\SimpleSpring.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp" />
-    <ClCompile Include="Graph\NodeGraph.cpp" />
-    <ClCompile Include="Graph\NodeGraphGeneticTraits.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

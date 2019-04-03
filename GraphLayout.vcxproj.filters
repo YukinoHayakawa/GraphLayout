@@ -15,33 +15,30 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Graph\SimplePointGraph.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Spring\SimpleSpring.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Graph\VectorTraits.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Genetic\GeneticOptimizer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Graph\NodeGraph.hpp">
+    <ClInclude Include="Genetic\GeneticOptimizationSystem.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Graph\NodeGraphGeneticTraits.hpp">
+    <ClInclude Include="Genetic\Crossover.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Genetic\Mutation.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Genetic\ParentSelection.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Genetic\Replacement.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Graph\NodeGraph.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Graph\NodeGraphGeneticTraits.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
