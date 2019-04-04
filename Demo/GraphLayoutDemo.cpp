@@ -6,7 +6,7 @@
 #include <Usagi/Runtime/Window/Window.hpp>
 
 #include "GraphLayoutDemoState.hpp"
-#include <GraphLayoutDemo/Editor/NodeEditorState.hpp>
+#include <GraphLayout/Editor/NodeEditorState.hpp>
 
 // #include "InitState.hpp"
 

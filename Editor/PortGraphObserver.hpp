@@ -55,6 +55,7 @@ struct PortGraphPopulationGenerator
 		individual.genotype.resize(size);
 		std::generate(
 			individual.genotype.begin(), individual.genotype.end(),
+			// use ref for rng to prevent being copied
 			std::bind(dist, std::ref(o.rng))
 		);
 		individual.graph = linked_graph;

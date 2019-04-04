@@ -3,8 +3,6 @@
 #include <vector>
 #include <random>
 
-#include <Usagi/Core/Math.hpp>
-
 namespace usagi::genetic
 {
 template <typename Genotype, typename Fitness>
