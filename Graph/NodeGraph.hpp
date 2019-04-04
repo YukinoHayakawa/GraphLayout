@@ -48,18 +48,19 @@ struct NodePrototype
     }
 };
 
+template <
+	typename PositionGetter
+>
 struct Node
 {
     NodePrototype *prototype = nullptr;
-    Vector2f position;
 
-    Node(NodePrototype *prototype, Vector2f position)
-        : prototype(prototype)
-        , position(std::move(position))
+    Node(NodePrototype *prototype)
+	    : prototype(prototype)
     {
     }
 
-    Vector2f portPosition(const Port &p) const
+    Vector2f portPosition(const Port &p, const Vector2f &position) const
     {
         Vector2f pos;
         switch(p.edge)
@@ -90,6 +91,9 @@ struct Node
     }
 };
 
+template <
+	typename Node
+>
 struct NodeGraph
 {
     struct Link

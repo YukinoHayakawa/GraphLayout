@@ -5,14 +5,20 @@
 
 #include <Usagi/Core/Math.hpp>
 
-namespace usagi
+namespace usagi::genetic
 {
 template <typename Genotype, typename Fitness>
 struct Individual
 {
+	// generator provides genotype
 	Genotype genotype;
-	Fitness fitness;
-	std::size_t birthday;
+
+	// this algorithm will set these values
+	Fitness fitness = 0;
+	std::size_t birthday = 0;
+	std::size_t family = 0;
+
+	// todo use trait functions -> genotype() -> auto &
 };
 
 // https://www.tutorialspoint.com/genetic_algorithms/index.htm
@@ -23,13 +29,14 @@ template <
 	typename CrossoverOperator,
 	typename MutationOperator,
 	typename ReplacementStrategy,
-	typename Rng = std::mt19937,
+	typename PopulationGenerator,
 	typename Genotype = std::vector<Gene>,
 	typename Individual = Individual<
 		Genotype,
 		typename FitnessFunction::value_type
 	>,
-	typename Population = std::vector<Individual>
+	typename Population = std::vector<Individual>,
+	typename Rng = std::mt19937
 >
 struct GeneticOptimizer
 {
@@ -51,11 +58,14 @@ struct GeneticOptimizer
 	MutationOperatorT mutation;
 	ReplacementStrategyT replacement;
 	PopulationT population;
+	PopulationGenerator generator;
 
 	std::size_t population_size = 100;
 	std::size_t year = 0;
 	double crossover_rate = 0.85;
 	double mutation_rate = 0.2;
+
+	Individual *best = nullptr;
 
 	auto chooseParents()
 	{
@@ -72,6 +82,28 @@ struct GeneticOptimizer
 		return std::forward_as_tuple(dead0, dead1);
 	}
 
+	void newIndividual(Individual &individual)
+	{
+		individual.birthday = year;
+		individual.fitness = fitness(individual);
+		// track best individual (elite)
+		// todo: ordered fitness using priority queue
+		if(best == nullptr || individual.fitness > best->fitness)
+			best = &individual;
+	}
+
+	void initializePopulation(std::size_t size)
+	{
+		population.reserve(size);
+		for(std::size_t i = 0; i < size; ++i)
+		{
+			population.push_back(generator(*this));
+			auto &back = population.back();
+			back.family = i;
+			newIndividual(back);
+		}
+	}
+
 	auto step()
 	{
 		// increment time
@@ -85,11 +117,12 @@ struct GeneticOptimizer
 		// copy genes
 		o0.genotype = p0.genotype;
 		o1.genotype = p1.genotype;
-		// reset age
-		o0.birthday = o1.birthday = year;
+		// set family
+		o0.family = p0.family;
+		o1.family = p1.family;
+
 		std::uniform_real_distribution<> dc(0, crossover_rate);
 		std::uniform_real_distribution<> dm(0, mutation_rate);
-
 		// crossover
 		if(dc(rng) < crossover_rate)
 			crossover(o0.genotype, o1.genotype, rng);
@@ -100,120 +133,8 @@ struct GeneticOptimizer
 			mutation(o1.genotype, rng);
 
 		// evaluate fitness of offspring
-		o0.fitness = fitness(o0.genotype);
-		o1.fitness = fitness(o1.genotype);
+		newIndividual(o0);
+		newIndividual(o1);
 	}
-
-	// void initializePopulation()
-	// {
-	// 	for(auto i = 0; i < population_size; ++i)
-	// 	{
-	// 	}
-	// }
-	//
-	// void optimize()
-	// {
-	// 	initializePopulation();
-	// 	do
-	// 	{
-	// 		step();
-	// 	}
-	// 	while(!terminationCondition());
-	// }
-
-	/*struct Individual
-	{
-	    node_graph::Genotype genotype;
-	    float fitness = NAN;
-	    NodeGraph phenotype;
-
-	    void mapPhenotype(const NodeGraph &prototype)
-	    {
-	        phenotype = prototype;
-	        for(int i = 0; i < phenotype.nodes.size(); ++i)
-	        {
-	            phenotype.nodes[i].center = {
-	                genotype[i * 2], genotype[i * 2 + 1]
-	            };
-	        }
-	    }
-
-	    void calcFitness()
-	    {
-	        float f = 0;
-	        for(auto &&l : phenotype.links)
-	        {
-	            auto &n0 = phenotype.nodes[l.node0];
-	            auto &n1 = phenotype.nodes[l.node1];
-	            f += (n1.center - n0.center).dot(Vector2f::UnitX());
-	        }
-	        fitness = f;
-	    }
-	};
-
-	AlignedBox2i bound;
-	node_graph::Population pop, pop2;
-	int init_pop_size = 100;
-	NodeGraph graph;
-	float pc = 0.2f;
-	float pm = 0.05f;
-
-	GeneticOptimizer(Element *parent, std::string name)
-	    : Element(parent, std::move(name))
-	{
-	}
-
-	void iteration()
-	{
-	    auto [i0, i1] = selectParents();
-	    [d0, d1] = selectDead();
-	    reproduce(i0, i1);
-
-	}
-
-	void initPopulation()
-	{
-	    for(int i = 0; i < init_pop_size; ++i)
-	    {
-	        node_graph::Genotype g;
-	        auto len = graph.nodes.size() * 2;
-	        g.reserve(len);
-	        for(int j = 0; j < len; ++j)
-	        {
-	            std::uniform_real_distribution<float> dis(10, 1000);
-	            g.push_back(dis(gen));
-	        }
-	        Individual ind;
-	        ind.genotype = std::move(g);
-	        ind.mapPhenotype(graph);
-	        ind.calcFitness();
-
-	        LOG(info, "Fitness: {}", ind.fitness);
-
-	        population.push_back(std::move(ind));
-	    }
-	}
-
-	void copy()
-	{
-	    // select (1-pc) from old population
-	}
-
-
-	void optimize()
-	{
-	    initPopulation();
-	    /*do
-	    {
-	        for(auto &&p : population)
-	        {
-	            copy();
-	            chooseParents();
-	            crossover();
-	            mutate();
-	        }
-	    }
-	    while(!terminateCondition());#1#
-	}*/
 };
 }

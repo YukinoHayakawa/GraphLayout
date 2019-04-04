@@ -21,9 +21,6 @@
     <ClInclude Include="Genetic\GeneticOptimizer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Genetic\GeneticOptimizationSystem.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Genetic\Crossover.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -36,9 +33,15 @@
     <ClInclude Include="Genetic\Replacement.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Graph\NodeGraph.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Graph\NodeGraph.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
