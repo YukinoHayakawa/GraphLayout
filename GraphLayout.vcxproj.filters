@@ -36,12 +36,33 @@
     <ClInclude Include="Graph\NodeGraph.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Demo\GraphLayoutDemo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\NodeEditorState.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Editor\PortGraphObserver.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Graph\NodeGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Demo\GraphLayoutDemo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Demo\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\NodeEditorState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Editor\PortGraphObserver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

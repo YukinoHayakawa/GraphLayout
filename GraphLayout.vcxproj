@@ -11,6 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Demo\GraphLayoutDemo.hpp" />
+    <ClInclude Include="Editor\NodeEditorState.hpp" />
+    <ClInclude Include="Editor\PortGraphObserver.hpp" />
     <ClInclude Include="Genetic\Crossover.hpp" />
     <ClInclude Include="Genetic\GeneticOptimizer.hpp" />
     <ClInclude Include="Genetic\Mutation.hpp" />
@@ -21,7 +24,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CreateLib.cpp" />
+    <ClCompile Include="Demo\GraphLayoutDemo.cpp" />
+    <ClCompile Include="Demo\main.cpp" />
+    <ClCompile Include="Editor\NodeEditorState.cpp" />
+    <ClCompile Include="Editor\PortGraphObserver.cpp" />
     <ClCompile Include="Graph\NodeGraph.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Usagi\Usagi\Usagi.vcxproj">
+      <Project>{4250e1c0-ea0b-4575-bc04-11e7f83c2ed4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
@@ -31,13 +43,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
