@@ -23,7 +23,6 @@
     <ClInclude Include="Spring\SimpleSpring.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CreateLib.cpp" />
     <ClCompile Include="Demo\GraphLayoutDemo.cpp" />
     <ClCompile Include="Demo\main.cpp" />
     <ClCompile Include="Editor\NodeEditorState.cpp" />

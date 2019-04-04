@@ -92,6 +92,9 @@ struct GeneticOptimizer
 
 	void initializePopulation(std::size_t size)
 	{
+		year = 0;
+		best = nullptr;
+		population.clear();
 		population.reserve(size);
 		for(std::size_t i = 0; i < size; ++i)
 		{

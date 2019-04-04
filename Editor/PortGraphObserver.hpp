@@ -36,7 +36,8 @@ struct PortGraphFitness
 		{
 			Vector2f &p0 = g.position(l.node0);
 			Vector2f &p1 = g.position(l.node1);
-			f -= (p1 - p0).dot(Vector2f::UnitX());
+			f -= (p1 - p0).norm();
+			// f -= (p1 - p0).dot(Vector2f::UnitX());
 		}
 		return f;
 	}

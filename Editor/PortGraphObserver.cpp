@@ -50,7 +50,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 		return;
 
 	if(nk_begin(ctx, fmt::format("Graph {}", static_cast<void*>(this)).c_str(),
-		nk_rect(0, 0, 1000, 1000),
+		nk_rect(0, 0, 1200, 1200),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
 		NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
@@ -103,6 +103,8 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		Checkbox("Progress", &mProgress);
 		if(Button("Step"))
 			mOptimizer.step();
+		if(Button("Init"))
+			mOptimizer.initializePopulation(100);
 		if(CollapsingHeader("Population"))
 		{
 			for(auto &&i : mOptimizer.population)
