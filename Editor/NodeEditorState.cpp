@@ -6,7 +6,7 @@
 #include <Usagi/Extension/ImGui/ImGuiSubsystem.hpp>
 #include <Usagi/Extension/Nuklear/NuklearSubsystem.hpp>
 
-#include "PortBasedGraph.hpp"
+#include "PortGraphObserver.hpp"
 
 usagi::NodeEditorState::NodeEditorState(
     Element *parent,
@@ -30,5 +30,5 @@ usagi::NodeEditorState::NodeEditorState(
     ));
     nk->setSizeFunctionsFromRenderWindow(mGame->mainWindow());
 
-    addChild<PortBasedGraph>("GraphBase");
+    addChild<PortGraphObserver>("GraphBase");
 }

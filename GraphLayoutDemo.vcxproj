@@ -19,7 +19,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main1.cpp" />
+    <ClCompile Include="Demo\GraphLayoutDemo.cpp" />
+    <ClCompile Include="Demo\main.cpp" />
+    <ClCompile Include="Editor\NodeEditorState.cpp" />
+    <ClCompile Include="Editor\PortGraphObserver.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Demo\GraphLayoutDemo.hpp" />
+    <ClInclude Include="Editor\NodeEditorState.hpp" />
+    <ClInclude Include="Editor\PortGraphObserver.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

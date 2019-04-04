@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 		// ind.genotype.insert(ind.genotype.begin(), 2, 0.0);
 		std::generate(
 			ind.genotype.begin(), ind.genotype.end(),
-			std::bind(dist, optimizer.rng)
+			std::bind(dist, std::ref(optimizer.rng))
 		);
 		ind.fitness = optimizer.fitness(ind.genotype);
 	}
