@@ -30,9 +30,66 @@ struct Fitness2
 
 	value_type operator()(std::vector<value_type> &g)
 	{
-		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		auto[a, b, c, d, e, f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
 		constexpr auto func = [](auto a, auto b) {
 			return std::sin(a + b) - a * a - b * b;
+		};
+		return func(a, b) + func(c, d) + func(e, f);
+	}
+};
+
+struct Fitness2_2
+{
+	using value_type = double;
+
+	value_type operator()(std::vector<value_type> &g)
+	{
+		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		constexpr auto func = [](auto a, auto b) {
+			return std::sin(a + b) / (a + b) - std::pow(a, 6) - std::pow(b, 8);
+		};
+		return func(a, b) + func(c, d) + func(e, f);
+	}
+};
+
+struct Fitness2_3
+{
+	using value_type = double;
+
+	value_type operator()(std::vector<value_type> &g)
+	{
+		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		constexpr auto func = [](auto a, auto b) {
+			return std::sin(a + std::pow(b,3)) -/* std::cos(b) **/ std::pow(a, 4) - std::pow(b, 6);
+		};
+		return func(a, b) + func(c, d) + func(e, f);
+	}
+};
+
+struct Fitness2_4
+{
+	using value_type = double;
+
+	value_type operator()(std::vector<value_type> &g)
+	{
+		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		constexpr auto func = [](auto a, auto b) {
+			return std::sin(a + std::pow(b,2)) * std::cos(a) * std::exp(a);
+		};
+		return func(a, b) + func(c, d) + func(e, f);
+	}
+};
+
+// stuck at local optimum
+struct Fitness2_5
+{
+	using value_type = double;
+
+	value_type operator()(std::vector<value_type> &g)
+	{
+		auto [a,b,c,d,e,f] = std::tie(g[0], g[1], g[2], g[3], g[4], g[5]);
+		constexpr auto func = [](auto a, auto b) {
+			return 20000.0 * std::sin(a + std::pow(b,3)) - (a * a) - b * b;
 		};
 		return func(a, b) + func(c, d) + func(e, f);
 	}
@@ -45,7 +102,7 @@ struct Fitness3
 
 	value_type operator()(std::vector<value_type> &g)
 	{
-		auto[a, b] = std::tie(g[0], g[1]);
+		auto [a, b] = std::tie(g[0], g[1]);
 		constexpr auto func = [](auto a, auto b) {
 			return std::sin(a + b) - a * a - b * b;
 		};
@@ -72,7 +129,7 @@ int main(int argc, char *argv[])
 {
 	GeneticOptimizer<
 		double,
-		Fitness2,
+		Fitness2_5,
 		parent::TournamentParentSelection<20>,
 		crossover::OnePointCrossover,
 		mutation::GaussianMutation<std::vector<double>>,
@@ -82,7 +139,7 @@ int main(int argc, char *argv[])
 
 	// optimizer.mutation.min = -0.01;
 	// optimizer.mutation.max = 0.01;
-	optimizer.mutation.std_dev = 0.01;
+	optimizer.mutation.std_dev = 0.1;
 	// optimizer.mutation_rate = 0.1;
 
 	// init populations
@@ -106,7 +163,7 @@ int main(int argc, char *argv[])
 
 	for(int i = 1; i < 1000000; ++i)
 	{
-		optimizer.mutation.std_dev = 1000.0 / i;
+		// optimizer.mutation.std_dev = 1000.0 / i;
 		auto best_fitness = std::max_element(
 			optimizer.population.begin(),
 			optimizer.population.end(),
