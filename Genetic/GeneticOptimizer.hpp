@@ -15,6 +15,7 @@ struct Individual
 	Fitness fitness = 0;
 	std::size_t birthday = 0;
 	std::size_t family = 0;
+	std::size_t generation = 0;
 
 	// todo use trait functions -> genotype() -> auto &
 };
@@ -120,7 +121,9 @@ struct GeneticOptimizer
 		o1.genotype = p1.genotype;
 		// set family
 		o0.family = p0.family;
+		o0.generation = p0.generation + 1;
 		o1.family = p1.family;
+		o1.generation = p1.generation + 1;
 
 		std::uniform_real_distribution<> dc(0, crossover_rate);
 		std::uniform_real_distribution<> dm(0, mutation_rate);

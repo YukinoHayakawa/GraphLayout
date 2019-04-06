@@ -107,15 +107,20 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 			mOptimizer.initializePopulation(100);
 		if(CollapsingHeader("Population"))
 		{
-			for(auto &&i : mOptimizer.population)
+			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
+				auto &ind = mOptimizer.population[i];
 				if(Selectable(fmt::format(
-					"Birth: {}, Family: {}, Fit: {}, Chromo: {}",
-					i.birthday, i.family, i.fitness,
-					fmt::join(i.genotype.begin(), i.genotype.end(), " ")
+					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}, Chromo: {}",
+					i,
+					ind.birthday,
+					ind.family,
+					ind.generation,
+					ind.fitness,
+					fmt::join(ind.genotype.begin(), ind.genotype.end(), " ")
 				).c_str()))
 				{
-					mDisplay = &i;
+					mDisplay = &ind;
 				}
 			}
 		}
@@ -125,7 +130,8 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 
 	if(mProgress)
 	{
-		mOptimizer.step();
-		LOG(info, "Best: {}", mOptimizer.best->fitness);
+		// for(int i = 0; i < 100; ++i)
+			mOptimizer.step();
+		// LOG(info, "Best: {}", mOptimizer.best->fitness);
 	}
 }

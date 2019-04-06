@@ -34,9 +34,20 @@ struct PortGraphFitness
 		float f = 0;
 		for(auto &&l : g.graph->links)
 		{
-			Vector2f &p0 = g.position(l.node0);
-			Vector2f &p1 = g.position(l.node1);
-			f -= (p1 - p0).norm();
+			// Vector2f &p0 = g.position(l.node0);
+			// Vector2f &p1 = g.position(l.node1);
+			auto &node0 = g.graph->nodes[l.node0];
+			auto &node1 = g.graph->nodes[l.node1];
+			auto *proto0 = node0.prototype;
+			auto *proto1 = node1.prototype;
+			auto &port0 = proto0->out_ports[l.port0];
+			auto &port1 = proto1->in_ports[l.port1];
+			auto pos0 = node0.portPosition(
+				port0, g.position(l.node0));
+			auto pos1 = node1.portPosition(
+				port1, g.position(l.node1));
+			f -= (pos0 - pos1).norm();
+			// f -= (p1 - p0).norm();
 			// f -= (p1 - p0).dot(Vector2f::UnitX());
 		}
 		return f;
@@ -77,7 +88,7 @@ class PortGraphObserver
 	genetic::GeneticOptimizer<
 		Gene,
 		PortGraphFitness,
-		genetic::parent::TournamentParentSelection<10>,
+		genetic::parent::TournamentParentSelection<3>,
 		genetic::crossover::OnePointCrossover,
 		genetic::mutation::GaussianMutation<Genotype>,
 		genetic::replacement::ReplaceWorst,

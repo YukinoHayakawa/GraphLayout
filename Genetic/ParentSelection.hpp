@@ -24,7 +24,11 @@ struct TournamentParentSelection
 
 		// randomly choose K individuals
         std::size_t positions[K];
-        std::generate(positions, positions + K, std::bind(pos_dist, o.rng));
+        std::generate(
+			positions, positions + K,
+			// remember to use ref to avoid copying!!!
+			std::bind(pos_dist, std::ref(o.rng))
+		);
 
         // find the one with max fitness
         std::size_t *best = std::max_element(positions, positions + K,
