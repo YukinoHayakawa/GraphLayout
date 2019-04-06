@@ -5,6 +5,42 @@
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <Usagi/Core/Logging.hpp>
 
+usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
+	PortGraphIndividual &g)
+{
+	float fit = 0;
+	for(auto &&l : g.graph->links)
+	{
+		// Vector2f &p0 = g.position(l.node0);
+		// Vector2f &p1 = g.position(l.node1);
+		auto &node0 = g.graph->nodes[l.node0];
+		auto &node1 = g.graph->nodes[l.node1];
+		auto *proto0 = node0.prototype;
+		auto *proto1 = node1.prototype;
+		auto &port0 = proto0->out_ports[l.port0];
+		auto &port1 = proto1->in_ports[l.port1];
+		auto pos0 = node0.portPosition(
+			port0, g.position(l.node0));
+		auto pos1 = node1.portPosition(
+			port1, g.position(l.node1));
+		// f -= std::abs((pos0 - pos1).norm() - 100.f);
+		// // f -= (p1 - p0).norm();
+		// f -= std::abs((pos1 - pos0).dot(Vector2f::UnitY()));
+		// prefer
+
+		Vector2f edge_diff = pos1 - pos0;
+		Vector2f normalized_edge = edge_diff.normalized();
+		// normalized edge direction using dot product. prefer edge towards
+		// right.
+		const auto edge_direction = normalized_edge.dot(Vector2f::UnitX());
+		// prefer given edge length
+		const auto edge_length = -std::pow(edge_diff.norm() - 300.f, 2.f) + 1;
+		fit += w_dir * edge_direction
+			* w_length * edge_length;
+	}
+	return fit;
+}
+
 usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	: Element(parent, std::move(name))
 {
@@ -100,11 +136,22 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 
 	if(Begin("Genetic Algorithm Control"))
 	{
+		SliderInt("Generations Per Step", &mStep, 1, 1000);
 		Checkbox("Progress", &mProgress);
 		if(Button("Step"))
 			mOptimizer.step();
 		if(Button("Init"))
+		{
+			mDisplay = nullptr;
 			mOptimizer.initializePopulation(100);
+		}
+		if(CollapsingHeader("Fitness"))
+		{
+			DragFloat("Direction", &mOptimizer.fitness.w_dir, 0.01f);
+			DragFloat("Length", &mOptimizer.fitness.w_length, 0.01f);
+		}
+		if(Button("Inspect Best"))
+			mDisplay = mOptimizer.best;
 		if(CollapsingHeader("Population"))
 		{
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
@@ -130,7 +177,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 
 	if(mProgress)
 	{
-		// for(int i = 0; i < 100; ++i)
+		for(int i = 0; i < mStep; ++i)
 			mOptimizer.step();
 		// LOG(info, "Best: {}", mOptimizer.best->fitness);
 	}

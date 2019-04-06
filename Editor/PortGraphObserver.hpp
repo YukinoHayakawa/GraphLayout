@@ -28,30 +28,10 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 struct PortGraphFitness
 {
 	using value_type = float;
+	float w_dir = 1;
+	float w_length = 1;
 
-	value_type operator()(PortGraphIndividual &g)
-	{
-		float f = 0;
-		for(auto &&l : g.graph->links)
-		{
-			// Vector2f &p0 = g.position(l.node0);
-			// Vector2f &p1 = g.position(l.node1);
-			auto &node0 = g.graph->nodes[l.node0];
-			auto &node1 = g.graph->nodes[l.node1];
-			auto *proto0 = node0.prototype;
-			auto *proto1 = node1.prototype;
-			auto &port0 = proto0->out_ports[l.port0];
-			auto &port1 = proto1->in_ports[l.port1];
-			auto pos0 = node0.portPosition(
-				port0, g.position(l.node0));
-			auto pos1 = node1.portPosition(
-				port1, g.position(l.node1));
-			f -= (pos0 - pos1).norm();
-			// f -= (p1 - p0).norm();
-			// f -= (p1 - p0).dot(Vector2f::UnitX());
-		}
-		return f;
-	}
+	value_type operator()(PortGraphIndividual &g);
 };
 
 struct PortGraphPopulationGenerator
@@ -98,6 +78,7 @@ class PortGraphObserver
 	> mOptimizer;
 
 	bool mProgress = false;
+	int mStep = 100;
 	PortGraphIndividual *mDisplay = nullptr;
 
 public:
