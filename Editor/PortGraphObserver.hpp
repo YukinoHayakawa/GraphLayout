@@ -61,7 +61,7 @@ class PortGraphObserver
 		PortGraphFitness,
 		genetic::parent::TournamentParentSelection<3>,
 		genetic::crossover::OnePointCrossover,
-		genetic::mutation::GaussianMutation<Genotype>,
+		genetic::mutation::UniformRealMutation<Genotype>,
 		genetic::replacement::ReplaceWorst,
 		PortGraphPopulationGenerator,
 		Genotype,

@@ -33,7 +33,7 @@ struct GaussianMutation
 template <
     typename Genotype
 >
-struct UniformMutation
+struct UniformIntMutation
 {
     using ValueT = typename Genotype::value_type;
     ValueT min = -1;
@@ -50,6 +50,26 @@ struct UniformMutation
 
         std::uniform_real_distribution<ValueT> num_dist(min, max);
         a[gene_pos] += num_dist(rng);
+    }
+};
+template <
+    typename Genotype
+>
+struct UniformRealMutation
+{
+    using ValueT = typename Genotype::value_type;
+    std::uniform_real_distribution<ValueT> range { 0, 1 };
+	float mutation_rate = 0.1f;
+
+    template <typename RNG>
+    void operator()(Genotype &a, RNG &rng)
+    {
+		std::uniform_real_distribution<float> mutation_dist { 0, 1 };
+		for(auto &&g : a)
+		{
+			if(mutation_dist(rng) < mutation_rate)
+				g = range(rng);
+		}
     }
 };
 }

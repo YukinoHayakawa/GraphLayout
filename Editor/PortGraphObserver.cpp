@@ -127,7 +127,9 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	g.links.emplace_back(13,0,17,5);
 
 	// proportional to canvas size of node graph
-	mOptimizer.mutation.std_dev = 10;
+	mOptimizer.mutation.range = std::uniform_real_distribution<float> {
+		0.f, 1000.f
+	};
 	// todo prevent the graph from going off-center
 
 	mOptimizer.initializePopulation(100);
