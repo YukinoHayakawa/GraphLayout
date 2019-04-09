@@ -8,78 +8,115 @@ namespace usagi::node_graph
 {
 struct Port
 {
-    std::string name;
+	std::string name;
 
-    enum class Edge
-    {
-        NORTH,
-        SOUTH,
-        WEST,
-        EAST,
-    } edge;
+	enum class Edge
+	{
+		NORTH,
+		SOUTH,
+		WEST,
+		EAST,
+	} edge;
 
-    // 0~1 on the edge
-    float edge_pos;
+	// 0~1 on the edge
+	float edge_pos;
 
-    Port(std::string name, Edge edge, float edge_pos)
-        : name(std::move(name))
-        , edge(edge)
-        , edge_pos(edge_pos)
-    {
-    }
+	Port() = default;
+
+	Port(std::string name, Edge edge, float edge_pos)
+		: name(std::move(name))
+		, edge(edge)
+		, edge_pos(edge_pos)
+	{
+	}
 };
 
 struct NodePrototype
 {
-    std::string name;
-    Vector2f size;
-    std::vector<Port> out_ports, in_ports;
+	std::string name;
+	Vector2f size;
+	std::vector<Port> out_ports, in_ports;
 
-    NodePrototype(std::string name, Vector2f size)
-        : name(std::move(name))
-        , size(std::move(size))
-    {
-    }
+	NodePrototype(std::string name, Vector2f size)
+		: name(std::move(name))
+		, size(std::move(size))
+	{
+	}
+
+	NodePrototype(
+		std::string name,
+		Vector2f size,
+		std::size_t in,
+		std::size_t out)
+		: NodePrototype(name, size)
+	{
+		createInPorts(in);
+		createOutPorts(out);
+	}
+
+	static void createPorts(
+		std::vector<Port> &sink,
+		std::size_t amount,
+		Port::Edge edge)
+	{
+		sink.resize(amount);
+		const float step = 1.f / (amount + 1);
+		for(std::size_t i = 0; i < amount; ++i)
+		{
+			sink[i].edge = edge;
+			sink[i].edge_pos = step * (i + 1);
+		}
+	}
+
+	void createOutPorts(std::size_t amount)
+	{
+		createPorts(out_ports, amount, Port::Edge::EAST);
+	}
+
+	void createInPorts(std::size_t amount)
+	{
+		createPorts(in_ports, amount, Port::Edge::WEST);
+	}
 
 	Vector2f portPosition(const Port &p, const Vector2f &position) const
 	{
 		Vector2f pos;
 		switch(p.edge)
 		{
-		case Port::Edge::NORTH:
-			pos.x() = lerp(p.edge_pos, 0.f, size.x())
-				+ position.x();
-			pos.y() = position.y();
-			break;
-		case Port::Edge::SOUTH:
-			pos.x() = lerp(p.edge_pos, 0.f, size.x())
-				+ position.x();
-			pos.y() = position.y() + size.y();
-			break;
-		case Port::Edge::WEST:
-			pos.x() = position.x();
-			pos.y() = lerp(p.edge_pos, 0.f, size.y())
-				+ position.y();
-			break;
-		case Port::Edge::EAST:
-			pos.x() = position.x() + size.x();
-			pos.y() = lerp(p.edge_pos, 0.f, size.y())
-				+ position.y();
-			break;
-		default:;
+			case Port::Edge::NORTH:
+				pos.x() = lerp(p.edge_pos, 0.f, size.x())
+					+ position.x();
+				pos.y() = position.y();
+				break;
+			case Port::Edge::SOUTH:
+				pos.x() = lerp(p.edge_pos, 0.f, size.x())
+					+ position.x();
+				pos.y() = position.y() + size.y();
+				break;
+			case Port::Edge::WEST:
+				pos.x() = position.x();
+				pos.y() = lerp(p.edge_pos, 0.f, size.y())
+					+ position.y();
+				break;
+			case Port::Edge::EAST:
+				pos.x() = position.x() + size.x();
+				pos.y() = lerp(p.edge_pos, 0.f, size.y())
+					+ position.y();
+				break;
+			default: ;
 		}
 		return pos;
 	}
 
 	const Port & outPort(std::size_t i) const
-    {
-	    return out_ports[i];
-    }
+	{
+		return out_ports[i];
+	}
 
 	const Port & inPort(std::size_t i) const
-    {
-	    return in_ports[i];
-    }
+	{
+		return in_ports[i];
+	}
 };
 
 struct Node
@@ -115,8 +152,8 @@ struct Link
 
 struct NodeGraph
 {
-    std::vector<Node> nodes;
-    std::vector<Link> links;
+	std::vector<Node> nodes;
+	std::vector<Link> links;
 
 	const Node & node(std::size_t i) const
 	{
@@ -129,7 +166,7 @@ struct NodeGraph
 	}
 
 	std::tuple<const Node&, const Port&, const Node&, const Port&>
-		mapLink(std::size_t i) const
+	mapLink(std::size_t i) const
 	{
 		auto &l = link(i);
 		auto &n0 = node(l.node0);
