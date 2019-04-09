@@ -29,7 +29,7 @@ struct PortGraphFitness
 struct PortGraphPopulationGenerator
 {
 	node_graph::NodeGraph prototype;
-	std::uniform_real_distribution<float> dist { 500, 510 };
+	std::uniform_real_distribution<float> domain { 500, 510 };
 
 	template <typename Optimizer>
 	PortGraphIndividual operator()(Optimizer &o)
@@ -39,7 +39,7 @@ struct PortGraphPopulationGenerator
 		std::generate(
 			individual.genotype.begin(), individual.genotype.end(),
 			// use ref for rng to prevent being copied
-			std::bind(dist, std::ref(o.rng))
+			std::bind(domain, std::ref(o.rng))
 		);
 		individual.graph.base_graph = &prototype;
 		individual.graph.node_positions = reinterpret_cast<Vector2f*>(

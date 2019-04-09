@@ -58,7 +58,7 @@ template <
 struct UniformRealMutation
 {
     using ValueT = typename Genotype::value_type;
-    std::uniform_real_distribution<ValueT> range { 0, 1 };
+    std::uniform_real_distribution<ValueT> domain { 0, 1 };
 	float mutation_rate = 0.1f;
 
     template <typename RNG>
@@ -68,7 +68,7 @@ struct UniformRealMutation
 		for(auto &&g : a)
 		{
 			if(mutation_dist(rng) < mutation_rate)
-				g = range(rng);
+				g = domain(rng);
 		}
     }
 };

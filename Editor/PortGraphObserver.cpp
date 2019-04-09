@@ -24,20 +24,16 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 				fit -= overlapped.volume();
 		}
 	}
-	/*const auto link_count = base_graph->links.size();
+	const auto link_count = base_graph->links.size();
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
-		auto &l
-		base_graph->mapNode()
-		for(auto j = i + 1; j < link_count; ++j)
-		{
-			auto r0 =
-		}
+		auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
+		if(pos0.x() < pos1.x())
+			fit += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 50.f));
 	}
-	for(auto &&l : base_graph->links)
+	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
-		auto [pos0, pos1] = g.graph.mapPortPositions(l);
 
 		auto r0 =
 
@@ -126,10 +122,12 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	g.links.emplace_back(5,0,13,4);
 	g.links.emplace_back(13,0,17,5);
 
-	// proportional to canvas size of node graph
-	mOptimizer.mutation.range = std::uniform_real_distribution<float> {
+	const auto domain = std::uniform_real_distribution<float> {
 		0.f, 1000.f
 	};
+	mOptimizer.generator.domain = domain;
+	// proportional to canvas size of node graph
+	mOptimizer.mutation.domain = domain;
 	// todo prevent the graph from going off-center
 
 	mOptimizer.initializePopulation(100);
@@ -168,12 +166,20 @@ void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 		for(std::size_t i = 0; i < b.links.size(); ++i)
 		{
 			auto [pos0, pos1] = g.mapLinkEndPoints(i);
-			nk_stroke_line(
+			nk_stroke_curve(
+				canvas,
+				pos0.x() + bound.x, pos0.y() + bound.y,
+				pos0.x() + bound.x + 50.f, pos0.y() + bound.y,
+				pos1.x() + bound.x - 50.f, pos1.y() + bound.y,
+				pos1.x() + bound.x, pos1.y() + bound.y,
+				2.f, nk_rgb(255, 255, 0)
+			);
+			/*nk_stroke_line(
 				canvas,
 				pos0.x() + bound.x, pos0.y() + bound.y,
 				pos1.x() + bound.x, pos1.y() + bound.y,
 				2.f, nk_rgb(255, 255, 0)
-			);
+			);*/
 		}
 	}
 	nk_end(ctx);
