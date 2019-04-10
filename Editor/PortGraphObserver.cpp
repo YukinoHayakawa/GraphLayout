@@ -130,6 +130,10 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	mOptimizer.mutation.domain = domain;
 	// todo prevent the graph from going off-center
 
+
+	mOptimizer.fitness_history_max = 10000;
+
+
 	initPopulation();
 }
 
@@ -205,15 +209,22 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		{
 			initPopulation();
 		}
-		if(CollapsingHeader("Fitness"))
+		if(CollapsingHeader("Fitness", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			DragFloat("Direction", &mOptimizer.fitness.w_dir, 0.01f);
 			DragFloat("Length", &mOptimizer.fitness.w_length, 0.01f);
+			PlotLines(
+				"Best Fitness History",
+				mOptimizer.fitness_history.data(),
+				static_cast<int>(mOptimizer.fitness_history.size()),
+				0, nullptr, FLT_MAX, FLT_MAX,
+				{ 0, 300 }
+			);
 		}
-		if(Button("Inspect Best"))
-			mDisplay = mOptimizer.best;
-		if(CollapsingHeader("Population"))
+		if(CollapsingHeader("Population", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			if(Button("Inspect Best"))
+				mDisplay = mOptimizer.best;
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
 				auto &ind = mOptimizer.population[i];

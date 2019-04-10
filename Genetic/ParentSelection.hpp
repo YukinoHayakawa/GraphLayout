@@ -18,8 +18,8 @@ namespace usagi::genetic::parent
  * \tparam CandidateSize How many parents to be chosen.
  */
 template <
-	std::size_t TournamentSize,
-	std::size_t CandidateSize
+	std::size_t TournamentSize = 5,
+	std::size_t CandidateSize = 2
 >
 struct TournamentParentSelection
 {

@@ -65,6 +65,9 @@ struct GeneticOptimizer
 	double mutation_rate = 0.2;
 
 	Individual *best = nullptr;
+	std::vector<float> fitness_history;
+	std::size_t fitness_history_interval = 500;
+	std::size_t fitness_history_max = 1000;
 
 	auto chooseParents()
 	{
@@ -95,6 +98,7 @@ struct GeneticOptimizer
 		best = nullptr;
 		population.clear();
 		population.reserve(size);
+		fitness_history.clear();
 		for(std::size_t i = 0; i < size; ++i)
 		{
 			population.push_back(generator(*this));
@@ -106,6 +110,13 @@ struct GeneticOptimizer
 
 	auto step()
 	{
+		// track best fitness history
+		if(fitness_history.size() < fitness_history_max && best)
+		{
+			if(year % fitness_history_interval == 0)
+				fitness_history.push_back(best->fitness);
+		}
+
 		// increment time
 		++year;
 
