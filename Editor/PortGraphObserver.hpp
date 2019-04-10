@@ -59,7 +59,7 @@ class PortGraphObserver
 	genetic::GeneticOptimizer<
 		Gene,
 		PortGraphFitness,
-		genetic::parent::TournamentParentSelection<3>,
+		genetic::parent::TournamentParentSelection<5, 2>,
 		genetic::crossover::OnePointCrossover,
 		genetic::mutation::UniformRealMutation<Genotype>,
 		genetic::replacement::ReplaceWorst,
@@ -69,8 +69,10 @@ class PortGraphObserver
 	> mOptimizer;
 
 	bool mProgress = false;
-	int mStep = 100;
+	int mStep = 1000;
 	PortGraphIndividual *mDisplay = nullptr;
+
+	void initPopulation();
 
 public:
 	PortGraphObserver(Element *parent, std::string name);

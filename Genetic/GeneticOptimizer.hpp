@@ -68,10 +68,8 @@ struct GeneticOptimizer
 
 	auto chooseParents()
 	{
-		return std::forward_as_tuple(
-			parent_selection(*this),
-			parent_selection(*this)
-		);
+		auto [i0, i1] = parent_selection(*this);
+		return std::forward_as_tuple(population[i0], population[i1]);
 	}
 
 	auto chooseReplacedIndividuals()
@@ -131,10 +129,8 @@ struct GeneticOptimizer
 		if(dc(rng) < crossover_rate)
 			crossover(o0.genotype, o1.genotype, rng);
 		// mutation
-		if(dm(rng) < mutation_rate)
-			mutation(o0.genotype, rng);
-		if(dm(rng) < mutation_rate)
-			mutation(o1.genotype, rng);
+		mutation(o0.genotype, rng);
+		mutation(o1.genotype, rng);
 
 		// evaluate fitness of offspring
 		newIndividual(o0);

@@ -29,7 +29,7 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	{
 		auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
 		if(pos0.x() < pos1.x())
-			fit += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 50.f));
+			fit += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 100.f));
 	}
 	/*for(auto &&l : base_graph->links)
 	{
@@ -130,7 +130,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	mOptimizer.mutation.domain = domain;
 	// todo prevent the graph from going off-center
 
-	mOptimizer.initializePopulation(100);
+	initPopulation();
 }
 
 void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
@@ -185,20 +185,25 @@ void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 	nk_end(ctx);
 }
 
+void usagi::PortGraphObserver::initPopulation()
+{
+	mDisplay = nullptr;
+	mOptimizer.initializePopulation(1000);
+}
+
 void usagi::PortGraphObserver::draw(const Clock &clock)
 {
 	using namespace ImGui;
 
 	if(Begin("Genetic Algorithm Control"))
 	{
-		SliderInt("Generations Per Step", &mStep, 1, 1000);
+		SliderInt("Generations Per Step", &mStep, 1, 2000);
 		Checkbox("Progress", &mProgress);
 		if(Button("Step"))
 			mOptimizer.step();
 		if(Button("Init"))
 		{
-			mDisplay = nullptr;
-			mOptimizer.initializePopulation(100);
+			initPopulation();
 		}
 		if(CollapsingHeader("Fitness"))
 		{
