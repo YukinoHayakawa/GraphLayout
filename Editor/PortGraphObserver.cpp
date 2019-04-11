@@ -139,7 +139,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 
 void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 {
-	const auto show = mDisplay ? mDisplay : mOptimizer.best;
+	const auto show = mDisplay ? mDisplay : mOptimizer.best.top();
 	if(show == nullptr)
 		return;
 
@@ -224,7 +224,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		if(CollapsingHeader("Population", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			if(Button("Inspect Best"))
-				mDisplay = mOptimizer.best;
+				mDisplay = mOptimizer.best.top();
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
 				auto &ind = mOptimizer.population[i];

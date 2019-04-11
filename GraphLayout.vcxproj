@@ -14,6 +14,7 @@
     <ClInclude Include="Demo\GraphLayoutDemo.hpp" />
     <ClInclude Include="Editor\NodeEditorState.hpp" />
     <ClInclude Include="Editor\PortGraphObserver.hpp" />
+    <ClInclude Include="Genetic\BinaryHeap.hpp" />
     <ClInclude Include="Genetic\Crossover.hpp" />
     <ClInclude Include="Genetic\GeneticOptimizer.hpp" />
     <ClInclude Include="Genetic\Mutation.hpp" />

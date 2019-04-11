@@ -3,6 +3,8 @@
 #include <vector>
 #include <random>
 
+#include "BinaryHeap.hpp"
+
 namespace usagi::genetic
 {
 template <typename Genotype, typename Fitness>
@@ -16,6 +18,8 @@ struct Individual
 	std::size_t birthday = 0;
 	std::size_t family = 0;
 	std::size_t generation = 0;
+
+	std::size_t queue_index = -1;
 
 	// todo use trait functions -> genotype() -> auto &
 };
@@ -46,6 +50,7 @@ struct GeneticOptimizer
 	using MutationOperatorT = MutationOperator;
 	using ReplacementStrategyT = ReplacementStrategy;
 	using RngT = Rng;
+	using PopulationGeneratorT = PopulationGenerator;
 	using GenotypeT = Genotype;
 	using IndividualT = Individual;
 	using PopulationT = Population;
@@ -57,14 +62,29 @@ struct GeneticOptimizer
 	MutationOperatorT mutation;
 	ReplacementStrategyT replacement;
 	PopulationT population;
-	PopulationGenerator generator;
+	PopulationGeneratorT generator;
 
 	std::size_t population_size = 100;
 	std::size_t year = 0;
 	double crossover_rate = 0.85;
-	double mutation_rate = 0.2;
 
-	Individual *best = nullptr;
+	// elite tracking
+
+	/**
+	 * \brief Uses > to turn the heap into a max heap.
+	 */
+	struct FitnessComparator
+	{
+		bool operator()(Individual *a, Individual *b) const
+		{
+			return a->fitness > b->fitness;
+		}
+	};
+
+	BinaryHeap<Individual*, FitnessComparator> best;
+
+	// fitness history
+
 	std::vector<float> fitness_history;
 	std::size_t fitness_history_interval = 500;
 	std::size_t fitness_history_max = 1000;
@@ -86,16 +106,22 @@ struct GeneticOptimizer
 	{
 		individual.birthday = year;
 		individual.fitness = fitness(individual);
+
 		// track best individual (elite)
-		// todo: ordered fitness using priority queue
-		if(best == nullptr || individual.fitness > best->fitness)
-			best = &individual;
+
+		// first iteration
+		if(individual.queue_index == -1)
+			best.insert(&individual);
+		// later iterations
+		else
+			best.modifyKey(individual.queue_index);
 	}
 
-	void initializePopulation(std::size_t size)
+	void initializePopulation(const std::size_t size)
 	{
 		year = 0;
-		best = nullptr;
+		best.clear();
+		best.reserve(size);
 		population.clear();
 		population.reserve(size);
 		fitness_history.clear();
@@ -111,10 +137,11 @@ struct GeneticOptimizer
 	auto step()
 	{
 		// track best fitness history
-		if(fitness_history.size() < fitness_history_max && best)
+		if(fitness_history.size() < fitness_history_max)
 		{
+			assert(!best.empty());
 			if(year % fitness_history_interval == 0)
-				fitness_history.push_back(best->fitness);
+				fitness_history.push_back(best.top()->fitness);
 		}
 
 		// increment time
@@ -135,7 +162,6 @@ struct GeneticOptimizer
 		o1.generation = p1.generation + 1;
 
 		std::uniform_real_distribution<> dc(0, crossover_rate);
-		std::uniform_real_distribution<> dm(0, mutation_rate);
 		// crossover
 		if(dc(rng) < crossover_rate)
 			crossover(o0.genotype, o1.genotype, rng);
