@@ -60,11 +60,15 @@ struct RoundRobinTournamentReplacement
 				// round-robin competition
 				for(std::size_t j = 0; j < TournamentSize; ++j)
 				{
-					if(o.population[index].fitness > o.population[j].fitness)
+					if(o.population[index].fitness >
+						o.population[opponents[j]].fitness)
 						++results[index].wins;
 				}
 			});
 
+		// shuffle the indices so individuals with the same wins have the
+		// same change to be chose.
+		std::shuffle(results.begin(), results.end(), o.rng);
 		// find individuals with low wins and let them be replaced
 		std::partial_sort(
 			results.begin(), results.begin() + ReplacementSize,
