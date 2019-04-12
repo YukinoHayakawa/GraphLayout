@@ -5,6 +5,128 @@
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 #include <Usagi/Core/Logging.hpp>
 
+namespace
+{
+// https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
+bool SegmentIntersectRectangle(
+	float a_rectangleMinX,
+	float a_rectangleMinY,
+	float a_rectangleMaxX,
+	float a_rectangleMaxY,
+	float a_p1x,
+	float a_p1y,
+	float a_p2x,
+	float a_p2y)
+{
+	// Find min and max X for the segment
+
+	float minX = a_p1x;
+	float maxX = a_p2x;
+
+	if(a_p1x > a_p2x)
+	{
+		minX = a_p2x;
+		maxX = a_p1x;
+	}
+
+	// Find the intersection of the segment's and rectangle's x-projections
+
+	if(maxX > a_rectangleMaxX)
+	{
+		maxX = a_rectangleMaxX;
+	}
+
+	if(minX < a_rectangleMinX)
+	{
+		minX = a_rectangleMinX;
+	}
+
+	if(minX > maxX) // If their projections do not intersect return false
+	{
+		return false;
+	}
+
+	// Find corresponding min and max Y for min and max X we found before
+
+	float minY = a_p1y;
+	float maxY = a_p2y;
+
+	float dx = a_p2x - a_p1x;
+
+	if(abs(dx) > 0.00001)
+	{
+		float a = (a_p2y - a_p1y) / dx;
+		float b = a_p1y - a * a_p1x;
+		minY = a * minX + b;
+		maxY = a * maxX + b;
+	}
+
+	if(minY > maxY)
+	{
+		float tmp = maxY;
+		maxY = minY;
+		minY = tmp;
+	}
+
+	// Find the intersection of the segment's and rectangle's y-projections
+
+	if(maxY > a_rectangleMaxY)
+	{
+		maxY = a_rectangleMaxY;
+	}
+
+	if(minY < a_rectangleMinY)
+	{
+		minY = a_rectangleMinY;
+	}
+
+	if(minY > maxY) // If Y-projections do not intersect return false
+	{
+		return false;
+	}
+
+	return true;
+}
+
+// https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+bool get_line_intersection(
+	float p0_x,
+	float p0_y,
+	float p1_x,
+	float p1_y,
+	float p2_x,
+	float p2_y,
+	float p3_x,
+	float p3_y,
+	float *i_x,
+	float *i_y)
+{
+	float s1_x, s1_y, s2_x, s2_y;
+	s1_x = p1_x - p0_x;
+	s1_y = p1_y - p0_y;
+	s2_x = p3_x - p2_x;
+	s2_y = p3_y - p2_y;
+
+	float s, t;
+	s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x *
+		s2_y);
+	t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x *
+		s2_y);
+
+	if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
+	{
+		// Collision detected
+		if(i_x != NULL)
+			*i_x = p0_x + (t * s1_x);
+		if(i_y != NULL)
+			*i_y = p0_y + (t * s1_y);
+		return 1;
+	}
+
+	return 0; // No collision
+}
+}
+
 usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	PortGraphIndividual &g) const
 {
@@ -14,6 +136,8 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	g.f_overlap = 0;
 	g.f_link_pos = 0;
 	g.f_link_angle = 0;
+	g.f_link_crossing = 0;
+	g.f_link_node_crossing = 0;
 	// calculate overlapped area
 	const auto node_count = base_graph->nodes.size();
 	for(std::size_t i = 0; i < node_count; ++i)
@@ -24,30 +148,59 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 			auto r1 = g.graph.mapNodeRegion(j);
 			const auto overlapped = r0.intersection(r1);
 			if(!overlapped.isEmpty())
-				g.f_overlap -= overlapped.volume();
+				g.f_overlap -= 1000;// overlapped.volume();
 		}
 	}
 	// calculate link position
 	const auto link_count = base_graph->links.size();
-	for(std::size_t i = 0; i < link_count; ++i)
-	{
-		auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
-		g.f_link_pos -= 0.1f * (pos0 - pos1).norm();
-	}
+	// for(std::size_t i = 0; i < link_count; ++i)
+	// {
+	// 	auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
+	// 	g.f_link_pos -= (pos0 - pos1).norm();
+	// }
 	// calculate link angle
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
-		auto[pos0, pos1] = g.graph.mapLinkEndPoints(i);
-		Vector2f edge_diff = pos1 - pos0;
+		auto [p0, p1] = g.graph.mapLinkEndPoints(i);
+		Vector2f edge_diff = p1 - p0;
 		Vector2f normalized_edge = edge_diff.normalized();
 		// normalized edge direction using dot product. prefer edge towards
 		// right.
 		const auto angle = std::acos(normalized_edge.dot(Vector2f::UnitX()));
-		// prefer given edge length
+		const auto delta_x = p1.x() - p0.x();
+		// output port is to the left of input port
+		if(delta_x < 0)
+			g.f_link_pos += delta_x;
+		// prefer smaller angle
 		if(angle > degreesToRadians(45.f))
-			g.f_link_angle -= 10;
+			g.f_link_angle -= 100;
+		// estimate bezier intersections
+		for(std::size_t j = i + 1; j < link_count; ++j)
+		{
+			auto [pp0, pp1] = g.graph.mapLinkEndPoints(j);
+			if(get_line_intersection(
+				p0.x(), p0.y(), p1.x(), p1.y(),
+				pp0.x(), pp0.y(), pp1.x(), pp1.y(), nullptr, nullptr
+			))
+				g.f_link_crossing -= 100;
+		}
+		// estimate bezier and node intersections
+		for(std::size_t j = 0; j < node_count; ++j)
+		{
+			auto r = g.graph.mapNodeRegion(j);
+			if(SegmentIntersectRectangle(
+				r.min().x(), r.min().y(),
+				r.max().x(), r.max().y(),
+				p0.x(), p0.y(), p1.x(), p1.y()
+			))
+				g.f_link_node_crossing -= 100;
+		}
 	}
-	fit = g.f_overlap - g.f_link_pos * g.f_link_angle;
+	fit = g.f_overlap
+		+ g.f_link_pos
+		+ g.f_link_angle
+		+ g.f_link_crossing
+		+ g.f_link_node_crossing;
 	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
@@ -84,7 +237,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	static NodePrototype add { "Add", { 60, 60 }, 2, 1 };
 	static NodePrototype multiply { "Multiply", { 60, 60 }, 2, 1 };
 	static NodePrototype divide { "Divide", { 60, 60 }, 2, 1 };
-	static NodePrototype condition { "Divide", { 70, 110 }, 5, 1 };
+	static NodePrototype condition { "If", { 70, 110 }, 5, 1 };
 	static NodePrototype shader { "Shader", { 110, 320 }, 17, 0 };
 
 	auto &g = mOptimizer.generator.prototype;
@@ -144,6 +297,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	mOptimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
 	mOptimizer.mutation.domain = domain;
+	// mOptimizer.mutation.std_dev = 100;
 	// todo prevent the graph from going off-center
 
 
@@ -237,13 +391,15 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		}
 		if(CollapsingHeader("Population", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			if(Button("Inspect Best"))
+			if(Button("Inspect Realtime Best"))
 				mDisplay = nullptr;
+			if(Button("Select Current Best"))
+				mDisplay = mOptimizer.best.top();
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
 				auto &ind = mOptimizer.population[i];
 				if(Selectable(fmt::format(
-					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={},angle={}], Chromo: {}",
+					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={},angle={},e_cross={},en_cross={}], Chromo: {}##{}",
 					i,
 					ind.birthday,
 					ind.family,
@@ -252,7 +408,10 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 					ind.f_overlap,
 					ind.f_link_pos,
 					ind.f_link_angle,
-					fmt::join(ind.genotype.begin(), ind.genotype.end(), " ")
+					ind.f_link_crossing,
+					ind.f_link_node_crossing,
+					fmt::join(ind.genotype.begin(), ind.genotype.end(), " "),
+					i
 				).c_str(), mDisplay == &ind))
 				{
 					mDisplay = &ind;
