@@ -13,6 +13,7 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 
 	g.f_overlap = 0;
 	g.f_link_pos = 0;
+	g.f_link_angle = 0;
 	// calculate overlapped area
 	const auto node_count = base_graph->nodes.size();
 	for(std::size_t i = 0; i < node_count; ++i)
@@ -34,7 +35,20 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 		if(pos0.x() < pos1.x())
 			g.f_link_pos += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 100.f));
 	}
-	fit = g.f_overlap + g.f_link_pos;
+	// calculate link angle
+	for(std::size_t i = 0; i < link_count; ++i)
+	{
+		auto[pos0, pos1] = g.graph.mapLinkEndPoints(i);
+		Vector2f edge_diff = pos1 - pos0;
+		Vector2f normalized_edge = edge_diff.normalized();
+		// normalized edge direction using dot product. prefer edge towards
+		// right.
+		const auto angle = std::acos(normalized_edge.dot(Vector2f::UnitX()));
+		// prefer given edge length
+		if(angle > degreesToRadians(45.f))
+			g.f_link_angle -= 1;
+	}
+	fit = g.f_overlap + g.f_link_angle;
 	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
@@ -177,8 +191,8 @@ void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 			nk_stroke_curve(
 				canvas,
 				pos0.x() + bound.x, pos0.y() + bound.y,
-				pos0.x() + bound.x + 50.f, pos0.y() + bound.y,
-				pos1.x() + bound.x - 50.f, pos1.y() + bound.y,
+				pos0.x() + bound.x + 100.f, pos0.y() + bound.y,
+				pos1.x() + bound.x - 100.f, pos1.y() + bound.y,
 				pos1.x() + bound.x, pos1.y() + bound.y,
 				2.f, nk_rgb(255, 255, 0)
 			);
@@ -231,7 +245,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 			{
 				auto &ind = mOptimizer.population[i];
 				if(Selectable(fmt::format(
-					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={}], Chromo: {}",
+					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={},angle={}], Chromo: {}",
 					i,
 					ind.birthday,
 					ind.family,
@@ -239,6 +253,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 					ind.fitness,
 					ind.f_overlap,
 					ind.f_link_pos,
+					ind.f_link_angle,
 					fmt::join(ind.genotype.begin(), ind.genotype.end(), " ")
 				).c_str(), mDisplay == &ind))
 				{

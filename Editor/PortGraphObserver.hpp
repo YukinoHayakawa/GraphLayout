@@ -18,6 +18,7 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 
 	float f_overlap = 0;
 	float f_link_pos = 0;
+	float f_link_angle = 0;
 };
 
 struct PortGraphFitness
