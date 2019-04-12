@@ -15,13 +15,14 @@ namespace usagi
 struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 {
 	node_graph::PortGraph graph;
+
+	float f_overlap = 0;
+	float f_link_pos = 0;
 };
 
 struct PortGraphFitness
 {
 	using value_type = float;
-	float w_dir = 1;
-	float w_length = 1;
 
 	value_type operator()(PortGraphIndividual &g) const;
 };
@@ -29,7 +30,7 @@ struct PortGraphFitness
 struct PortGraphPopulationGenerator
 {
 	node_graph::NodeGraph prototype;
-	std::uniform_real_distribution<float> domain { 500, 510 };
+	std::uniform_real_distribution<float> domain { 0, 1 };
 
 	template <typename Optimizer>
 	PortGraphIndividual operator()(Optimizer &o)
@@ -60,7 +61,7 @@ class PortGraphObserver
 		Gene,
 		PortGraphFitness,
 		genetic::parent::TournamentParentSelection<5, 2>,
-		genetic::crossover::OnePointCrossover,
+		genetic::crossover::WholeArithmeticRecombination,
 		genetic::mutation::UniformRealMutation<Genotype>,
 		genetic::replacement::RoundRobinTournamentReplacement<10, 2>,
 		PortGraphPopulationGenerator,

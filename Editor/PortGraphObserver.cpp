@@ -11,6 +11,8 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	float fit = 0;
 	auto *base_graph = g.graph.base_graph;
 
+	g.f_overlap = 0;
+	g.f_link_pos = 0;
 	// calculate overlapped area
 	const auto node_count = base_graph->nodes.size();
 	for(std::size_t i = 0; i < node_count; ++i)
@@ -21,16 +23,18 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 			auto r1 = g.graph.mapNodeRegion(j);
 			const auto overlapped = r0.intersection(r1);
 			if(!overlapped.isEmpty())
-				fit -= overlapped.volume();
+				g.f_overlap -= overlapped.volume();
 		}
 	}
+	// calculate link position
 	const auto link_count = base_graph->links.size();
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
 		auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
 		if(pos0.x() < pos1.x())
-			fit += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 100.f));
+			g.f_link_pos += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 100.f));
 	}
+	fit = g.f_overlap + g.f_link_pos;
 	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
@@ -123,7 +127,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	g.links.emplace_back(13,0,17,5);
 
 	const auto domain = std::uniform_real_distribution<float> {
-		0.f, 1000.f
+		0.f, 1500.f
 	};
 	mOptimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
@@ -145,7 +149,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 
 	if(nk_begin(ctx,
 		"Graph",
-		nk_rect(0, 0, 1200, 1200),
+		nk_rect(0, 0, 1500, 1500),
 		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
 		NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
 	{
@@ -211,8 +215,6 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		}
 		if(CollapsingHeader("Fitness", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			DragFloat("Direction", &mOptimizer.fitness.w_dir, 0.01f);
-			DragFloat("Length", &mOptimizer.fitness.w_length, 0.01f);
 			PlotLines(
 				"Best Fitness History",
 				mOptimizer.fitness_history.data(),
@@ -224,19 +226,21 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		if(CollapsingHeader("Population", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			if(Button("Inspect Best"))
-				mDisplay = mOptimizer.best.top();
+				mDisplay = nullptr;
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
 				auto &ind = mOptimizer.population[i];
 				if(Selectable(fmt::format(
-					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}, Chromo: {}",
+					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={}], Chromo: {}",
 					i,
 					ind.birthday,
 					ind.family,
 					ind.generation,
 					ind.fitness,
+					ind.f_overlap,
+					ind.f_link_pos,
 					fmt::join(ind.genotype.begin(), ind.genotype.end(), " ")
-				).c_str()))
+				).c_str(), mDisplay == &ind))
 				{
 					mDisplay = &ind;
 				}
