@@ -146,7 +146,7 @@ public:
 	{
 		// recover proper order. if the element is smaller than its parent
 		// then bubble up. otherwise sink down.
-		if(mComparator(mHeap[index], mHeap[parent(index)]))
+		if(index > 0 && mComparator(mHeap[index], mHeap[parent(index)]))
 			bubble(index);
 		else
 			sink(index);
