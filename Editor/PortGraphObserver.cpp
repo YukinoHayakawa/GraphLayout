@@ -32,8 +32,7 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
 		auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
-		if(pos0.x() < pos1.x())
-			g.f_link_pos += 1.f / (0.1f + std::abs((pos0 - pos1).norm() - 100.f));
+		g.f_link_pos -= 0.1f * (pos0 - pos1).norm();
 	}
 	// calculate link angle
 	for(std::size_t i = 0; i < link_count; ++i)
@@ -46,9 +45,9 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 		const auto angle = std::acos(normalized_edge.dot(Vector2f::UnitX()));
 		// prefer given edge length
 		if(angle > degreesToRadians(45.f))
-			g.f_link_angle -= 1;
+			g.f_link_angle -= 10;
 	}
-	fit = g.f_overlap + g.f_link_angle;
+	fit = g.f_overlap - g.f_link_pos * g.f_link_angle;
 	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
@@ -178,7 +177,17 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 			auto &n = b.node(i);
 			auto r = g.mapNodeRegion(i);
 			SetCursorPos({ r.min().x(), r.min().y() });
-			Button(n.prototype->name.c_str(), { r.sizes().x(), r.sizes().y() });
+			Button(fmt::format("{}##{}",
+				n.prototype->name.c_str(), i).c_str(),
+				{ r.sizes().x(), r.sizes().y() }
+			);
+			if(IsItemActive() && IsMouseDragging())
+			{
+				g.node_positions[i] += Vector2f {
+					GetIO().MouseDelta.x, GetIO().MouseDelta.y
+				};
+				mOptimizer.reevaluateIndividual(*show);
+			}
 		}
 		SetCursorPos({ 0, 0 });
 		const ImVec2 p = GetCursorScreenPos();

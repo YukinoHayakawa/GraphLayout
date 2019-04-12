@@ -106,16 +106,7 @@ struct GeneticOptimizer
 	void newIndividual(Individual &individual)
 	{
 		individual.birthday = year;
-		individual.fitness = fitness(individual);
-
-		// track best individual (elite)
-
-		// first iteration
-		if(individual.queue_index == -1)
-			best.insert(&individual);
-		// later iterations
-		else
-			best.modifyKey(individual.queue_index);
+		reevaluateIndividual(individual);
 	}
 
 	void initializePopulation(const std::size_t size)
@@ -135,6 +126,20 @@ struct GeneticOptimizer
 			back.index = static_cast<std::uint32_t>(i);
 			newIndividual(back);
 		}
+	}
+
+	void reevaluateIndividual(Individual &individual)
+	{
+		individual.fitness = fitness(individual);
+
+		// track best individual (elite)
+
+		// first iteration
+		if(individual.queue_index == -1)
+			best.insert(&individual);
+		// later iterations
+		else
+			best.modifyKey(individual.queue_index);
 	}
 
 	auto step()
