@@ -90,6 +90,7 @@ struct GeneticOptimizer
 	std::vector<float> fitness_history;
 	std::size_t fitness_history_interval = 500;
 	std::size_t fitness_history_max = 1000;
+	float last_best_fitness = -1e10;
 
 	auto chooseParents()
 	{
@@ -118,6 +119,7 @@ struct GeneticOptimizer
 		population.clear();
 		population.reserve(size);
 		fitness_history.clear();
+		last_best_fitness = -1e10;
 		for(std::size_t i = 0; i < size; ++i)
 		{
 			population.push_back(generator(*this));
@@ -148,8 +150,13 @@ struct GeneticOptimizer
 		if(fitness_history.size() < fitness_history_max)
 		{
 			assert(!best.empty());
-			if(year % fitness_history_interval == 0)
+			// if(year % fitness_history_interval == 0)
+			// 	fitness_history.push_back(best.top()->fitness);
+			if(best.top()->fitness > last_best_fitness)
+			{
 				fitness_history.push_back(best.top()->fitness);
+				last_best_fitness = best.top()->fitness;
+			}
 		}
 
 		// increment time
