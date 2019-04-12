@@ -10,17 +10,18 @@ namespace usagi::genetic
 template <typename Genotype, typename Fitness>
 struct Individual
 {
+	std::uint32_t birthday = 0;
+	std::uint32_t generation = 0;
+
+	std::uint32_t family = 0;
+	std::uint32_t index = -1;
+	std::size_t queue_index = -1;
+
 	// generator provides genotype
 	Genotype genotype;
 
 	// this algorithm will set these values
 	Fitness fitness = 0;
-	std::size_t birthday = 0;
-	std::size_t family = 0;
-	std::size_t generation = 0;
-
-	std::size_t index = -1;
-	std::size_t queue_index = -1;
 
 	// todo use trait functions -> genotype() -> auto &
 };
@@ -66,7 +67,7 @@ struct GeneticOptimizer
 	PopulationGeneratorT generator;
 
 	std::size_t population_size = 100;
-	std::size_t year = 0;
+	std::uint32_t year = 0;
 	double crossover_rate = 0.85;
 
 	// elite tracking
@@ -119,6 +120,7 @@ struct GeneticOptimizer
 
 	void initializePopulation(const std::size_t size)
 	{
+		assert(size < std::numeric_limits<std::uint32_t>::max());
 		year = 0;
 		best.clear();
 		best.reserve(size);
@@ -129,8 +131,8 @@ struct GeneticOptimizer
 		{
 			population.push_back(generator(*this));
 			auto &back = population.back();
-			back.family = i;
-			back.index = i;
+			back.family = static_cast<std::uint32_t>(i);
+			back.index = static_cast<std::uint32_t>(i);
 			newIndividual(back);
 		}
 	}

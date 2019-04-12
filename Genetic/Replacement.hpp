@@ -5,6 +5,7 @@
 #include <random>
 #include <algorithm>
 #include <atomic>
+#include <execution>
 
 namespace usagi::genetic::replacement
 {
@@ -16,8 +17,8 @@ struct RoundRobinTournamentReplacement
 {
 	struct Tournament
 	{
-		std::uint16_t index = 0;
-		std::atomic<std::uint16_t> wins = 0;
+		std::uint32_t index = 0;
+		std::uint32_t wins = 0;
 
 		friend bool operator<(const Tournament &a, const Tournament &b)
 		{
@@ -31,31 +32,38 @@ struct RoundRobinTournamentReplacement
 	auto operator()(Optimizer &o)
 	{
 		assert(o.population.size() >= ReplacementSize);
-		assert(o.population.size() < 0xFFFF);
+		assert(o.population.size() <
+			std::numeric_limits<std::uint32_t>::max());
 
 		results.resize(o.population.size());
 
-		std::size_t opponents[TournamentSize];
 		std::uniform_int_distribution<std::size_t> pos_dist(
 			0, o.population.size() - 1
 		);
 
 		// for each individual, find some random competitors
-		for(std::size_t i = 0; i < o.population.size(); ++i)
-		{
-			results[i].index = static_cast<std::uint16_t>(i);
-			results[i].wins = 0;
-			// randomly choose opponents
-			std::generate(
-				opponents, opponents + TournamentSize,
-				std::bind(pos_dist, std::ref(o.rng))
-			);
-			for(std::size_t j = 0; j < TournamentSize; ++j)
-			{
-				if(o.population[i].fitness > o.population[j].fitness)
-					++results[i].wins;
-			}
-		}
+		std::for_each(
+			std::execution::par_unseq,
+			o.population.begin(), o.population.end(),
+			[this, pos_dist, &o](auto &&individual) {
+				std::size_t opponents[TournamentSize];
+				const auto index = individual.index;
+				std::minstd_rand rng { std::random_device()() };
+				// init result
+				results[index].index = index;
+				results[index].wins = 0;
+				// randomly choose tournament opponents
+				std::generate(
+					opponents, opponents + TournamentSize,
+					std::bind(pos_dist, std::ref(rng))
+				);
+				// round-robin competition
+				for(std::size_t j = 0; j < TournamentSize; ++j)
+				{
+					if(o.population[index].fitness > o.population[j].fitness)
+						++results[index].wins;
+				}
+			});
 
 		// find individuals with low wins and let them be replaced
 		std::partial_sort(
