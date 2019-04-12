@@ -77,7 +77,6 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	: Element(parent, std::move(name))
 {
 	addComponent(static_cast<ImGuiComponent*>(this));
-	addComponent(static_cast<NuklearComponent*>(this));
 
 	using namespace node_graph;
 	static NodePrototype color { "Single Color", { 100, 100 }, 0, 1 };
@@ -141,7 +140,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	g.links.emplace_back(13,0,17,5);
 
 	const auto domain = std::uniform_real_distribution<float> {
-		0.f, 1500.f
+		0.f, 1200.f
 	};
 	mOptimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
@@ -155,58 +154,6 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	initPopulation();
 }
 
-void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
-{
-	const auto show = mDisplay ? mDisplay : mOptimizer.best.top();
-	if(show == nullptr)
-		return;
-
-	if(nk_begin(ctx,
-		"Graph",
-		nk_rect(0, 0, 1500, 1500),
-		NK_WINDOW_BORDER | NK_WINDOW_MOVABLE | NK_WINDOW_MINIMIZABLE |
-		NK_WINDOW_SCALABLE | NK_WINDOW_CLOSABLE))
-	{
-		auto *canvas = nk_window_get_canvas(ctx);
-		const auto total_space = nk_window_get_content_region(ctx);
-		const auto bound = nk_layout_space_bounds(ctx);
-		auto &g = show->graph;
-		auto &b = *g.base_graph;
-		nk_layout_space_begin(ctx, NK_STATIC, total_space.h,
-			static_cast<int>(b.nodes.size()));
-
-		for(std::size_t i = 0; i < b.nodes.size(); ++i)
-		{
-			auto &n = b.node(i);
-			auto r = g.mapNodeRegion(i);
-			nk_layout_space_push(ctx, nk_rect(
-				r.min().x(), r.min().y(),
-				r.sizes().x(), r.sizes().y()
-			));
-			nk_button_label(ctx, n.prototype->name.c_str());
-		}
-		for(std::size_t i = 0; i < b.links.size(); ++i)
-		{
-			auto [pos0, pos1] = g.mapLinkEndPoints(i);
-			nk_stroke_curve(
-				canvas,
-				pos0.x() + bound.x, pos0.y() + bound.y,
-				pos0.x() + bound.x + 100.f, pos0.y() + bound.y,
-				pos1.x() + bound.x - 100.f, pos1.y() + bound.y,
-				pos1.x() + bound.x, pos1.y() + bound.y,
-				2.f, nk_rgb(255, 255, 0)
-			);
-			/*nk_stroke_line(
-				canvas,
-				pos0.x() + bound.x, pos0.y() + bound.y,
-				pos1.x() + bound.x, pos1.y() + bound.y,
-				2.f, nk_rgb(255, 255, 0)
-			);*/
-		}
-	}
-	nk_end(ctx);
-}
-
 void usagi::PortGraphObserver::initPopulation()
 {
 	mDisplay = nullptr;
@@ -217,7 +164,49 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 {
 	using namespace ImGui;
 
-	if(Begin("Genetic Algorithm Control"))
+	const auto show = mDisplay ? mDisplay : mOptimizer.best.top();
+	if(Begin("Graph Inspection",
+		nullptr,
+		ImGuiWindowFlags_HorizontalScrollbar) && show)
+	{
+		auto &g = show->graph;
+		auto &b = *g.base_graph;
+		auto draw_list = GetWindowDrawList();
+
+		for(std::size_t i = 0; i < b.nodes.size(); ++i)
+		{
+			auto &n = b.node(i);
+			auto r = g.mapNodeRegion(i);
+			SetCursorPos({ r.min().x(), r.min().y() });
+			Button(n.prototype->name.c_str(), { r.sizes().x(), r.sizes().y() });
+		}
+		SetCursorPos({ 0, 0 });
+		const ImVec2 p = GetCursorScreenPos();
+		for(std::size_t i = 0; i < b.links.size(); ++i)
+		{
+			auto [p0, p1] = g.mapLinkEndPoints(i);
+			const Vector2f size = (p1 - p0).cwiseAbs();
+			draw_list->AddBezierCurve(
+				{ p0.x() + p.x, p0.y() + p.y },
+				{
+					p0.x() + p.x + size.x() * 0.8f,
+					p0.y() + p.y
+				},
+				{
+					p1.x() + p.x - size.x() * 0.8f,
+					p1.y() + p.y
+				},
+				{ p1.x() + p.x, p1.y() + p.y },
+				IM_COL32(47, 79, 79, 200),
+				2
+			);
+		}
+	}
+	End();
+
+	if(Begin("Genetic Algorithm Control",
+		nullptr,
+		ImGuiWindowFlags_HorizontalScrollbar))
 	{
 		SliderInt("Generations Per Step", &mStep, 1, 2000);
 		Checkbox("Progress", &mProgress);

@@ -3,7 +3,6 @@
 #include <Usagi/Core/Element.hpp>
 #include <Usagi/Extension/ImGui/ImGuiComponent.hpp>
 #include <GraphLayout/Graph/NodeGraph.hpp>
-#include <Usagi/Extension/Nuklear/NuklearComponent.hpp>
 #include <GraphLayout/Genetic/GeneticOptimizer.hpp>
 #include <GraphLayout/Genetic/ParentSelection.hpp>
 #include <GraphLayout/Genetic/Crossover.hpp>
@@ -52,7 +51,6 @@ struct PortGraphPopulationGenerator
 
 class PortGraphObserver
 	: public Element
-	, public NuklearComponent
 	, public ImGuiComponent
 {
 	using Gene = float;
@@ -79,7 +77,6 @@ class PortGraphObserver
 public:
 	PortGraphObserver(Element *parent, std::string name);
 
-	void draw(const Clock &clock, nk_context *ctx) override;
 	void draw(const Clock &clock) override;
 };
 }
