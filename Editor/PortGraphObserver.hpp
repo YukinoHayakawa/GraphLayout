@@ -62,7 +62,7 @@ class PortGraphObserver
 		genetic::parent::TournamentParentSelection<5, 2>,
 		genetic::crossover::OnePointCrossover,
 		genetic::mutation::UniformRealMutation<Genotype>,
-		genetic::replacement::ReplaceWorst,
+		genetic::replacement::RoundRobinTournamentReplacement<10, 2>,
 		PortGraphPopulationGenerator,
 		Genotype,
 		PortGraphIndividual

@@ -19,6 +19,7 @@ struct Individual
 	std::size_t family = 0;
 	std::size_t generation = 0;
 
+	std::size_t index = -1;
 	std::size_t queue_index = -1;
 
 	// todo use trait functions -> genotype() -> auto &
@@ -97,9 +98,8 @@ struct GeneticOptimizer
 
 	auto chooseReplacedIndividuals()
 	{
-		auto &dead0 = replacement(*this, static_cast<IndividualT*>(nullptr));
-		auto &dead1 = replacement(*this, &dead0);
-		return std::forward_as_tuple(dead0, dead1);
+		auto [i0, i1] = replacement(*this);
+		return std::forward_as_tuple(population[i0], population[i1]);
 	}
 
 	void newIndividual(Individual &individual)
@@ -130,6 +130,7 @@ struct GeneticOptimizer
 			population.push_back(generator(*this));
 			auto &back = population.back();
 			back.family = i;
+			back.index = i;
 			newIndividual(back);
 		}
 	}

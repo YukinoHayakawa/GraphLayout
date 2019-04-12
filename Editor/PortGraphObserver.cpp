@@ -192,7 +192,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock, nk_context *ctx)
 void usagi::PortGraphObserver::initPopulation()
 {
 	mDisplay = nullptr;
-	mOptimizer.initializePopulation(1000);
+	mOptimizer.initializePopulation(200);
 }
 
 void usagi::PortGraphObserver::draw(const Clock &clock)
