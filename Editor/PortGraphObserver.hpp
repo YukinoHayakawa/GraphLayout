@@ -20,13 +20,18 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 	float f_link_angle = 0;
 	float f_link_crossing = 0;
 	float f_link_node_crossing = 0;
+
+	std::vector<Vector2f> crosses;
 };
 
 struct PortGraphFitness
 {
+	static constexpr std::size_t BEZIER_SEGMENT_COUNT = 6;
 	using value_type = float;
+	// + 1 for beginning point
+	std::vector<std::array<Vector2f, BEZIER_SEGMENT_COUNT + 1>> bezier_points;
 
-	value_type operator()(PortGraphIndividual &g) const;
+	value_type operator()(PortGraphIndividual &g);
 };
 
 struct PortGraphPopulationGenerator
@@ -71,7 +76,7 @@ class PortGraphObserver
 	> mOptimizer;
 
 	bool mProgress = false;
-	int mStep = 1000;
+	int mStep = 100;
 	PortGraphIndividual *mDisplay = nullptr;
 
 	void initPopulation();

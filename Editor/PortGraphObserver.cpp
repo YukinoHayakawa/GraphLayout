@@ -3,10 +3,11 @@
 #include <fmt/format.h>
 
 #include <Usagi/Extension/ImGui/ImGui.hpp>
-#include <Usagi/Core/Logging.hpp>
 
 namespace
 {
+using namespace usagi;
+
 // https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
 bool SegmentIntersectRectangle(
 	float a_rectangleMinX,
@@ -90,88 +91,121 @@ bool SegmentIntersectRectangle(
 
 // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
 bool get_line_intersection(
-	float p0_x,
-	float p0_y,
-	float p1_x,
-	float p1_y,
-	float p2_x,
-	float p2_y,
-	float p3_x,
-	float p3_y,
-	float *i_x,
-	float *i_y)
+	const Vector2f &p0,
+	const Vector2f &p1,
+	const Vector2f &p2,
+	const Vector2f &p3,
+	std::vector<Vector2f> &crosses
+)
 {
-	float s1_x, s1_y, s2_x, s2_y;
-	s1_x = p1_x - p0_x;
-	s1_y = p1_y - p0_y;
-	s2_x = p3_x - p2_x;
-	s2_y = p3_y - p2_y;
+	const Vector2f s1 = p1 - p0;
+	const Vector2f s2 = p3 - p2;
 
 	float s, t;
-	s = (-s1_y * (p0_x - p2_x) + s1_x * (p0_y - p2_y)) / (-s2_x * s1_y + s1_x *
-		s2_y);
-	t = (s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x *
-		s2_y);
+	s = (-s1.y() * (p0.x() - p2.x()) + s1.x() * (p0.y() - p2.y())) / (-s2.x() *
+		s1.y() + s1.x() *
+		s2.y());
+	t = (s2.x() * (p0.y() - p2.y()) - s2.y() * (p0.x() - p2.x())) / (-s2.x() *
+		s1.y() + s1.x() *
+		s2.y());
 
 	if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
 	{
-		// Collision detected
-		if(i_x != NULL)
-			*i_x = p0_x + (t * s1_x);
-		if(i_y != NULL)
-			*i_y = p0_y + (t * s1_y);
-		return 1;
+		const Vector2f x = p0 + t * s1;
+		if(x == p0 || x == p1 || x == p2 || x == p3) return false;
+		crosses.push_back(x);
+		return true;
 	}
 
-	return 0; // No collision
+	return false;
 }
 
 // imgui
 // http://www.malinc.se/m/DeCasteljauAndBezier.php
 void PathBezierToCasteljau(
-	std::vector<usagi::Vector2f> &points,
-	float x1,
-	float y1,
-	float x2,
-	float y2,
-	float x3,
-	float y3,
-	float x4,
-	float y4,
-	float tess_tol,
-	int level)
+	std::vector<Vector2f> &points,
+	const Vector2f &p1,
+	const Vector2f &p2,
+	const Vector2f &p3,
+	const Vector2f &p4,
+	float tess_tol = 0.99f,
+	int level = 0)
 {
-	float dx = x4 - x1;
-	float dy = y4 - y1;
-	float d2 = ((x2 - x4) * dy - (y2 - y4) * dx);
-	float d3 = ((x3 - x4) * dy - (y3 - y4) * dx);
-	d2 = (d2 >= 0) ? d2 : -d2;
-	d3 = (d3 >= 0) ? d3 : -d3;
+	if(level == 0) points.emplace_back(p1.x(), p1.y());
+	const auto dx = p4.x() - p1.x();
+	const auto dy = p4.y() - p1.y();
+	const auto d2 = std::abs((p2.x() - p4.x()) * dy - (p2.y() - p4.y()) * dx);
+	const auto d3 = std::abs((p3.x() - p4.x()) * dy - (p3.y() - p4.y()) * dx);
 	if((d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy))
 	{
-		points.emplace_back(x4, y4);
+		points.emplace_back(p4.x(), p4.y());
 	}
-	else if(level < 10)
+	else if(level < 5)
 	{
-		float x12 = (x1 + x2) * 0.5f, y12 = (y1 + y2) * 0.5f;
-		float x23 = (x2 + x3) * 0.5f, y23 = (y2 + y3) * 0.5f;
-		float x34 = (x3 + x4) * 0.5f, y34 = (y3 + y4) * 0.5f;
-		float x123 = (x12 + x23) * 0.5f, y123 = (y12 + y23) * 0.5f;
-		float x234 = (x23 + x34) * 0.5f, y234 = (y23 + y34) * 0.5f;
-		float x1234 = (x123 + x234) * 0.5f, y1234 = (y123 + y234) * 0.5f;
-
-		PathBezierToCasteljau(points, x1, y1, x12, y12, x123, y123, x1234,
-			y1234,
+		const Vector2f p12 = 0.5f * (p1 + p2);
+		const Vector2f p23 = 0.5f * (p2 + p3);
+		const Vector2f p34 = 0.5f * (p4 + p4);
+		const Vector2f p123 = 0.5f * (p12 + p23);
+		const Vector2f p234 = 0.5f * (p23 + p34);
+		const Vector2f p1234 = 0.5f * (p123 + p234);
+		PathBezierToCasteljau(points, p1, p12, p123, p1234,
 			tess_tol, level + 1);
-		PathBezierToCasteljau(points, x1234, y1234, x234, y234, x34, y34, x4,
-			y4,
+		PathBezierToCasteljau(points, p1234, p234, p34, p4,
 			tess_tol, level + 1);
 	}
 }
+
+template <std::size_t I>
+void PathBezierCurveTo(
+	std::array<Vector2f, I> &points,
+	const Vector2f &p1,
+	const Vector2f &p2,
+	const Vector2f &p3,
+	const Vector2f &p4)
+{
+	points[0] = p1;
+	float t_step = 1.0f / (float)(I - 1);
+	for(int i_step = 1; i_step <= I - 1; i_step++)
+	{
+		float t = t_step * i_step;
+		float u = 1.0f - t;
+		float w1 = u * u*u;
+		float w2 = 3 * u*u*t;
+		float w3 = 3 * u*t*t;
+		float w4 = t * t*t;
+		points[i_step] = Vector2f(
+			w1*p1.x() + w2 * p2.x() + w3 * p3.x() + w4 * p4.x(),
+			w1*p1.y() + w2 * p2.y() + w3 * p3.y() + w4 * p4.y()
+		);
+	}
 }
 
-usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
-	PortGraphIndividual &g) const
+
+auto getBezierControlPoints(
+	const Vector2f &p0,
+	const Vector2f &p1,
+	const Vector2f &offset
+)
+{
+	const Vector2f size = (p1 - p0).cwiseAbs();
+	const auto control_x = std::min(size.x(), 250.f);
+
+	return std::make_tuple(
+		Vector2f(p0.x() + offset.x(), p0.y() + offset.y()),
+		Vector2f(
+			p0.x() + offset.x() + control_x * 0.8f,
+			p0.y() + offset.y()
+		),
+		Vector2f(
+			p1.x() + offset.x() - control_x * 0.8f,
+			p1.y() + offset.y()),
+		Vector2f(p1.x() + offset.x(), p1.y() + offset.y())
+	);
+}
+}
+
+PortGraphFitness::value_type PortGraphFitness::operator()(
+	PortGraphIndividual &g)
 {
 	float fit = 0;
 	auto *base_graph = g.graph.base_graph;
@@ -202,9 +236,39 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	// 	g.f_link_pos -= (pos0 - pos1).norm();
 	// }
 	// calculate link angle
+	bezier_points.resize(link_count);
+	g.crosses.clear();
+	for(std::size_t i = 0; i < link_count; ++i)
+	{
+		auto[p0, p1] = g.graph.mapLinkEndPoints(i);
+		// bezier_points[i].clear();
+		auto [a, b, c, d] = getBezierControlPoints(p0, p1, Vector2f::Zero());
+		// PathBezierToCasteljau(bezier_points[i], a, b, c, d);
+		PathBezierCurveTo(bezier_points[i], a, b, c, d);
+	}
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
 		auto [p0, p1] = g.graph.mapLinkEndPoints(i);
+
+		AlignedBox2f box0 { p0, p1 };
+		// estimate bezier intersections
+		for(std::size_t j = i + 1; j < link_count; ++j)
+		{
+			auto [pp0, pp1] = g.graph.mapLinkEndPoints(j);
+			for(std::size_t ii = 0; ii < bezier_points[i].size() - 1; ++ii)
+			{
+				for(std::size_t jj = 0; jj < bezier_points[j].size() - 1; ++jj)
+				{
+					if(get_line_intersection(
+						bezier_points[i][ii], bezier_points[i][ii + 1],
+						bezier_points[j][jj], bezier_points[j][jj + 1],
+						g.crosses
+					))
+						g.f_link_crossing -= 100;
+				}
+			}
+		}
+
 		Vector2f edge_diff = p1 - p0;
 		Vector2f normalized_edge = edge_diff.normalized();
 		// normalized edge direction using dot product. prefer edge towards
@@ -221,16 +285,7 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 			g.f_link_angle += 100;
 		// else
 		// 	g.f_link_angle += -2.4f * deg_angle + 280.f;
-		// estimate bezier intersections
-		for(std::size_t j = i + 1; j < link_count; ++j)
-		{
-			auto [pp0, pp1] = g.graph.mapLinkEndPoints(j);
-			if(get_line_intersection(
-				p0.x(), p0.y(), p1.x(), p1.y(),
-				pp0.x(), pp0.y(), pp1.x(), pp1.y(), nullptr, nullptr
-			))
-				g.f_link_crossing -= 100;
-		}
+
 		// estimate bezier and node intersections
 		for(std::size_t j = 0; j < node_count; ++j)
 		{
@@ -245,9 +300,9 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	}
 	fit = g.f_overlap
 		+ g.f_link_pos
-		+ g.f_link_angle
-		+ g.f_link_crossing
-		+ g.f_link_node_crossing;
+		// + g.f_link_angle
+		+ g.f_link_crossing;
+		// + g.f_link_node_crossing;
 	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
@@ -272,7 +327,7 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 	return fit;
 }
 
-usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
+PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	: Element(parent, std::move(name))
 {
 	addComponent(static_cast<ImGuiComponent*>(this));
@@ -354,13 +409,13 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	initPopulation();
 }
 
-void usagi::PortGraphObserver::initPopulation()
+void PortGraphObserver::initPopulation()
 {
 	mDisplay = nullptr;
 	mOptimizer.initializePopulation(200);
 }
 
-void usagi::PortGraphObserver::draw(const Clock &clock)
+void PortGraphObserver::draw(const Clock &clock)
 {
 	using namespace ImGui;
 
@@ -396,44 +451,40 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		for(std::size_t i = 0; i < b.links.size(); ++i)
 		{
 			auto [p0, p1] = g.mapLinkEndPoints(i);
-			const Vector2f size = (p1 - p0).cwiseAbs();
-			const auto control_x = std::min(size.x(), 250.f);
-
-			std::vector<Vector2f> points = {
-				{ p0.x() + p.x, p0.y() + p.y }
-			};
-
-			PathBezierToCasteljau(points,
-				p0.x() + p.x, p0.y() + p.y,
-				p0.x() + p.x + control_x * 0.8f,
-				p0.y() + p.y,
-				p1.x() + p.x - control_x * 0.8f,
-				p1.y() + p.y,
-				p1.x() + p.x, p1.y() + p.y, 3.f, 0);
-			for(std::size_t j = 0; j < points.size() - 1; ++j)
-			{
-				draw_list->AddLine(
-					{ points[j].x(), points[j].y() },
-					{ points[j+1].x(), points[j+1].y() },
-					IM_COL32(47, 79, 79, 200),
-					(float)j + 1.f
-				);
-
-			}
-			// draw_list->AddBezierCurve(
-			// 	{ p0.x() + p.x, p0.y() + p.y },
-			// 	{
-			// 		p0.x() + p.x + control_x * 0.8f,
-			// 		p0.y() + p.y
-			// 	},
-			// 	{
-			// 		p1.x() + p.x - control_x * 0.8f,
-			// 		p1.y() + p.y
-			// 	},
-			// 	{ p1.x() + p.x, p1.y() + p.y },
-			// 	IM_COL32(47, 79, 79, 200),
-			// 	2
-			// );
+			auto [a, b, c, d] = getBezierControlPoints(p0, p1, (Vector2f&)p);
+			// std::vector<Vector2f> points = {
+			// 	{ p0.x() + p.x, p0.y() + p.y }
+			// };
+			//
+			// PathBezierToCasteljau(points,
+			// 	a,b,c,d, 0.990f, 0);
+			// for(std::size_t j = 0; j < points.size() - 1; ++j)
+			// {
+			// 	draw_list->AddLine(
+			// 		{ points[j].x(), points[j].y() },
+			// 		{ points[j+1].x(), points[j+1].y() },
+			// 		IM_COL32(47, 79, 79, 200),
+			// 		(float)j + 1.f
+			// 	);
+			//
+			// }
+			draw_list->AddBezierCurve(
+				(ImVec2&)a,
+				(ImVec2&)b,
+				(ImVec2&)c,
+				(ImVec2&)d,
+				IM_COL32(47, 79, 79, 200),
+				2, PortGraphFitness::BEZIER_SEGMENT_COUNT
+			);
+		}
+		// draw edge crosses
+		for(auto &&c : show->crosses)
+		{
+			Vector2f center = c + (Vector2f&)p;
+			draw_list->AddCircle(
+				(const ImVec2&)center,
+				2, IM_COL32(255, 0, 0, 255), 4
+			);
 		}
 	}
 	End();
@@ -469,7 +520,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
 				auto &ind = mOptimizer.population[i];
-				if(Selectable(fmt::format(
+				if(Selectable(format(
 					"#{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={},angle={},e_cross={},en_cross={}], Chromo: {}##{}",
 					i,
 					ind.birthday,
