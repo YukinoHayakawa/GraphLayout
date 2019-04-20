@@ -125,6 +125,49 @@ bool get_line_intersection(
 
 	return 0; // No collision
 }
+
+// imgui
+// http://www.malinc.se/m/DeCasteljauAndBezier.php
+void PathBezierToCasteljau(
+	std::vector<usagi::Vector2f> &points,
+	float x1,
+	float y1,
+	float x2,
+	float y2,
+	float x3,
+	float y3,
+	float x4,
+	float y4,
+	float tess_tol,
+	int level)
+{
+	float dx = x4 - x1;
+	float dy = y4 - y1;
+	float d2 = ((x2 - x4) * dy - (y2 - y4) * dx);
+	float d3 = ((x3 - x4) * dy - (y3 - y4) * dx);
+	d2 = (d2 >= 0) ? d2 : -d2;
+	d3 = (d3 >= 0) ? d3 : -d3;
+	if((d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy))
+	{
+		points.emplace_back(x4, y4);
+	}
+	else if(level < 10)
+	{
+		float x12 = (x1 + x2) * 0.5f, y12 = (y1 + y2) * 0.5f;
+		float x23 = (x2 + x3) * 0.5f, y23 = (y2 + y3) * 0.5f;
+		float x34 = (x3 + x4) * 0.5f, y34 = (y3 + y4) * 0.5f;
+		float x123 = (x12 + x23) * 0.5f, y123 = (y12 + y23) * 0.5f;
+		float x234 = (x23 + x34) * 0.5f, y234 = (y23 + y34) * 0.5f;
+		float x1234 = (x123 + x234) * 0.5f, y1234 = (y123 + y234) * 0.5f;
+
+		PathBezierToCasteljau(points, x1, y1, x12, y12, x123, y123, x1234,
+			y1234,
+			tess_tol, level + 1);
+		PathBezierToCasteljau(points, x1234, y1234, x234, y234, x34, y34, x4,
+			y4,
+			tess_tol, level + 1);
+	}
+}
 }
 
 usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
@@ -167,13 +210,17 @@ usagi::PortGraphFitness::value_type usagi::PortGraphFitness::operator()(
 		// normalized edge direction using dot product. prefer edge towards
 		// right.
 		const auto angle = std::acos(normalized_edge.dot(Vector2f::UnitX()));
-		const auto delta_x = p1.x() - p0.x();
 		// output port is to the left of input port
-		if(delta_x < 0)
-			g.f_link_pos += delta_x;
+		if(edge_diff.x() < 0)
+			g.f_link_pos += edge_diff.x();
 		// prefer smaller angle
-		if(angle > degreesToRadians(45.f))
-			g.f_link_angle -= 100;
+		// if(degreesToRadians(angle) < 45.f)
+			// g.f_link_angle += (180.f - radiansToDegrees(angle));
+		const auto deg_angle = radiansToDegrees(angle);
+		if(deg_angle < 75.f)
+			g.f_link_angle += 100;
+		// else
+		// 	g.f_link_angle += -2.4f * deg_angle + 280.f;
 		// estimate bezier intersections
 		for(std::size_t j = i + 1; j < link_count; ++j)
 		{
@@ -292,7 +339,7 @@ usagi::PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	g.links.emplace_back(13,0,17,5);
 
 	const auto domain = std::uniform_real_distribution<float> {
-		0.f, 1200.f
+		0.f, 1000.f
 	};
 	mOptimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
@@ -342,6 +389,7 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 				};
 				mOptimizer.reevaluateIndividual(*show);
 			}
+			// todo draw ports
 		}
 		SetCursorPos({ 0, 0 });
 		const ImVec2 p = GetCursorScreenPos();
@@ -349,20 +397,43 @@ void usagi::PortGraphObserver::draw(const Clock &clock)
 		{
 			auto [p0, p1] = g.mapLinkEndPoints(i);
 			const Vector2f size = (p1 - p0).cwiseAbs();
-			draw_list->AddBezierCurve(
-				{ p0.x() + p.x, p0.y() + p.y },
-				{
-					p0.x() + p.x + size.x() * 0.8f,
-					p0.y() + p.y
-				},
-				{
-					p1.x() + p.x - size.x() * 0.8f,
-					p1.y() + p.y
-				},
-				{ p1.x() + p.x, p1.y() + p.y },
-				IM_COL32(47, 79, 79, 200),
-				2
-			);
+			const auto control_x = std::min(size.x(), 250.f);
+
+			std::vector<Vector2f> points = {
+				{ p0.x() + p.x, p0.y() + p.y }
+			};
+
+			PathBezierToCasteljau(points,
+				p0.x() + p.x, p0.y() + p.y,
+				p0.x() + p.x + control_x * 0.8f,
+				p0.y() + p.y,
+				p1.x() + p.x - control_x * 0.8f,
+				p1.y() + p.y,
+				p1.x() + p.x, p1.y() + p.y, 3.f, 0);
+			for(std::size_t j = 0; j < points.size() - 1; ++j)
+			{
+				draw_list->AddLine(
+					{ points[j].x(), points[j].y() },
+					{ points[j+1].x(), points[j+1].y() },
+					IM_COL32(47, 79, 79, 200),
+					(float)j + 1.f
+				);
+
+			}
+			// draw_list->AddBezierCurve(
+			// 	{ p0.x() + p.x, p0.y() + p.y },
+			// 	{
+			// 		p0.x() + p.x + control_x * 0.8f,
+			// 		p0.y() + p.y
+			// 	},
+			// 	{
+			// 		p1.x() + p.x - control_x * 0.8f,
+			// 		p1.y() + p.y
+			// 	},
+			// 	{ p1.x() + p.x, p1.y() + p.y },
+			// 	IM_COL32(47, 79, 79, 200),
+			// 	2
+			// );
 		}
 	}
 	End();
