@@ -236,7 +236,7 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 	// 	g.f_link_pos -= (pos0 - pos1).norm();
 	// }
 	// calculate link angle
-	bezier_points.resize(link_count);
+	bezier_curves.resize(link_count);
 	g.crosses.clear();
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
@@ -244,7 +244,15 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 		// bezier_points[i].clear();
 		auto [a, b, c, d] = getBezierControlPoints(p0, p1, Vector2f::Zero());
 		// PathBezierToCasteljau(bezier_points[i], a, b, c, d);
-		PathBezierCurveTo(bezier_points[i], a, b, c, d);
+		PathBezierCurveTo(bezier_curves[i].points, a, b, c, d);
+		bezier_curves[i].bbox = AlignedBox2f {
+			bezier_curves[i].points[0],
+			bezier_curves[i].points[0]
+		};
+		for(auto &&p : bezier_curves[i].points)
+		{
+			bezier_curves[i].bbox.extend(p);
+		}
 	}
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
@@ -255,13 +263,19 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 		for(std::size_t j = i + 1; j < link_count; ++j)
 		{
 			auto [pp0, pp1] = g.graph.mapLinkEndPoints(j);
-			for(std::size_t ii = 0; ii < bezier_points[i].size() - 1; ++ii)
+			for(std::size_t ii = 0;
+				ii < bezier_curves[i].points.size() - 1; ++ii)
 			{
-				for(std::size_t jj = 0; jj < bezier_points[j].size() - 1; ++jj)
+				for(std::size_t jj = 0;
+					jj < bezier_curves[j].points.size() - 1; ++jj)
 				{
+					if(!bezier_curves[i].bbox.intersects(bezier_curves[j].bbox))
+						continue;
 					if(get_line_intersection(
-						bezier_points[i][ii], bezier_points[i][ii + 1],
-						bezier_points[j][jj], bezier_points[j][jj + 1],
+						bezier_curves[i].points[ii],
+						bezier_curves[i].points[ii + 1],
+						bezier_curves[j].points[jj],
+						bezier_curves[j].points[jj + 1],
 						g.crosses
 					))
 						g.f_link_crossing -= 100;
@@ -300,7 +314,7 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 	}
 	fit = g.f_overlap
 		+ g.f_link_pos
-		// + g.f_link_angle
+		+ g.f_link_angle
 		+ g.f_link_crossing;
 		// + g.f_link_node_crossing;
 	/*for(auto &&l : base_graph->links)
@@ -474,7 +488,7 @@ void PortGraphObserver::draw(const Clock &clock)
 				(ImVec2&)c,
 				(ImVec2&)d,
 				IM_COL32(47, 79, 79, 200),
-				2, PortGraphFitness::BEZIER_SEGMENT_COUNT
+				2//, PortGraphFitness::BEZIER_SEGMENT_COUNT
 			);
 		}
 		// draw edge crosses
