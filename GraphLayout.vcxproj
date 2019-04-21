@@ -28,7 +28,6 @@
     <ClCompile Include="Demo\main.cpp" />
     <ClCompile Include="Editor\NodeEditorState.cpp" />
     <ClCompile Include="Editor\PortGraphObserver.cpp" />
-    <ClCompile Include="Graph\NodeGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Usagi\Usagi\Usagi.vcxproj">

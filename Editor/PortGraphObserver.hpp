@@ -37,6 +37,9 @@ struct PortGraphFitness
 {
 	using value_type = float;
 
+	float p_max_angle = 60;
+	float p_min_pos_x = 50;
+
 	value_type operator()(PortGraphIndividual &g);
 };
 

@@ -288,16 +288,10 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 		// right.
 		const auto angle = std::acos(normalized_edge.dot(Vector2f::UnitX()));
 		// output port is to the left of input port
-		if(edge_diff.x() < 0)
-			g.f_link_pos += edge_diff.x();
+		g.f_link_pos += std::min(edge_diff.x(), p_min_pos_x);
 		// prefer smaller angle
-		// if(degreesToRadians(angle) < 45.f)
-			// g.f_link_angle += (180.f - radiansToDegrees(angle));
 		const auto deg_angle = radiansToDegrees(angle);
-		if(deg_angle < 75.f)
-			g.f_link_angle += 100;
-		// else
-		// 	g.f_link_angle += -2.4f * deg_angle + 280.f;
+		g.f_link_angle -= std::max(p_max_angle, deg_angle);
 
 		// estimate bezier and node intersections
 		for(std::size_t j = 0; j < node_count; ++j)
@@ -427,7 +421,7 @@ PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	g.links.emplace_back(13,0,17,5);
 
 	const auto domain = std::uniform_real_distribution<float> {
-		0.f, 1000.f
+		0.f, 1200.f
 	};
 	mOptimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
@@ -561,7 +555,16 @@ void PortGraphObserver::draw(const Clock &clock)
 			Checkbox("Show Crossings", &mShowCrossings);
 			Checkbox("Show Ports", &mShowPorts);
 		}
-		SliderInt("Generations Per Step", &mStep, 1, 2000);
+		if(CollapsingHeader("Parameters", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			SliderFloat("Max Angle",
+				&mOptimizer.fitness.p_max_angle,
+				0, 180);
+			SliderFloat("Min Positive Edge Length X",
+				&mOptimizer.fitness.p_min_pos_x,
+				0, 200);
+		}
+		SliderInt("Generations Per Step", &mStep, 1, 500);
 		Checkbox("Progress", &mProgress);
 		if(Button("Step"))
 			mOptimizer.step();

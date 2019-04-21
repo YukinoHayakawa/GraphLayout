@@ -50,9 +50,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Graph\NodeGraph.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Demo\GraphLayoutDemo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
