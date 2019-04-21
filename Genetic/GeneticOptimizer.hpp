@@ -7,7 +7,7 @@
 
 namespace usagi::genetic
 {
-template <typename Genotype, typename Fitness>
+template <typename Genotype>
 struct Individual
 {
 	std::uint32_t birthday = 0;
@@ -19,9 +19,6 @@ struct Individual
 
 	// generator provides genotype
 	Genotype genotype;
-
-	// this algorithm will set these values
-	Fitness fitness = 0;
 
 	// todo use trait functions -> genotype() -> auto &
 };
@@ -36,10 +33,7 @@ template <
 	typename ReplacementStrategy,
 	typename PopulationGenerator,
 	typename Genotype = std::vector<Gene>,
-	typename Individual = Individual<
-		Genotype,
-		typename FitnessFunction::value_type
-	>,
+	typename Individual = Individual<Genotype>,
 	typename Population = std::vector<Individual>,
 	typename Rng = std::mt19937
 >
@@ -56,6 +50,7 @@ struct GeneticOptimizer
 	using GenotypeT = Genotype;
 	using IndividualT = Individual;
 	using PopulationT = Population;
+	using FitnessT = typename FitnessFunctionT::FitnessT;
 
 	RngT rng;
 	FitnessFunctionT fitness;
@@ -79,7 +74,7 @@ struct GeneticOptimizer
 	{
 		bool operator()(Individual *a, Individual *b) const
 		{
-			return a->fitness > b->fitness;
+			return b->fitness < a->fitness;
 		}
 	};
 
@@ -87,10 +82,8 @@ struct GeneticOptimizer
 
 	// fitness history
 
-	std::vector<float> fitness_history;
-	std::size_t fitness_history_interval = 500;
-	std::size_t fitness_history_max = 1000;
-	float last_best_fitness = -1e10;
+	std::vector<FitnessT> fitness_history;
+	FitnessT last_best_fitness;
 
 	auto chooseParents()
 	{
@@ -119,7 +112,6 @@ struct GeneticOptimizer
 		population.clear();
 		population.reserve(size);
 		fitness_history.clear();
-		last_best_fitness = -1e10;
 		for(std::size_t i = 0; i < size; ++i)
 		{
 			population.push_back(generator(*this));
@@ -147,16 +139,11 @@ struct GeneticOptimizer
 	auto step()
 	{
 		// track best fitness history
-		if(fitness_history.size() < fitness_history_max)
+		assert(!best.empty());
+		if(last_best_fitness < best.top()->fitness)
 		{
-			assert(!best.empty());
-			// if(year % fitness_history_interval == 0)
-			// 	fitness_history.push_back(best.top()->fitness);
-			if(best.top()->fitness > last_best_fitness)
-			{
-				fitness_history.push_back(best.top()->fitness);
-				last_best_fitness = best.top()->fitness;
-			}
+			fitness_history.push_back(best.top()->fitness);
+			last_best_fitness = best.top()->fitness;
 		}
 
 		// increment time

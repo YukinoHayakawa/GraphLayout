@@ -11,10 +11,11 @@
 
 namespace usagi
 {
-struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
+struct PortGraphIndividual : genetic::Individual<std::vector<float>>
 {
 	node_graph::PortGraph graph;
 
+	float fitness = 0;
 	float f_overlap = 0;
 	float f_link_pos = 0;
 	float f_link_angle = 0;
@@ -35,12 +36,12 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 
 struct PortGraphFitness
 {
-	using value_type = float;
+	using FitnessT = float;
 
 	float p_max_angle = 60;
 	float p_min_pos_x = 50;
 
-	value_type operator()(PortGraphIndividual &g);
+	FitnessT operator()(PortGraphIndividual &g);
 };
 
 struct PortGraphPopulationGenerator

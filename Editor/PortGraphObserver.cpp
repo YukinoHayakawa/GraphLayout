@@ -206,7 +206,7 @@ auto getBezierControlPoints(
 }
 }
 
-PortGraphFitness::value_type PortGraphFitness::operator()(
+PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	PortGraphIndividual &g)
 {
 	float fit = 0;
@@ -428,10 +428,6 @@ PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	mOptimizer.mutation.domain = domain;
 	// mOptimizer.mutation.std_dev = 100;
 	// todo prevent the graph from going off-center
-
-
-	mOptimizer.fitness_history_max = 10000;
-
 
 	initPopulation();
 }
