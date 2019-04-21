@@ -236,7 +236,7 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 	// 	g.f_link_pos -= (pos0 - pos1).norm();
 	// }
 	// calculate link angle
-	bezier_curves.resize(link_count);
+	g.bezier_curves.resize(link_count);
 	g.crosses.clear();
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
@@ -244,14 +244,11 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 		// bezier_points[i].clear();
 		auto [a, b, c, d] = getBezierControlPoints(p0, p1, Vector2f::Zero());
 		// PathBezierToCasteljau(bezier_points[i], a, b, c, d);
-		PathBezierCurveTo(bezier_curves[i].points, a, b, c, d);
-		bezier_curves[i].bbox = AlignedBox2f {
-			bezier_curves[i].points[0],
-			bezier_curves[i].points[0]
-		};
-		for(auto &&p : bezier_curves[i].points)
+		PathBezierCurveTo(g.bezier_curves[i].points, a, b, c, d);
+		g.bezier_curves[i].bbox = AlignedBox2f();
+		for(auto &&p : g.bezier_curves[i].points)
 		{
-			bezier_curves[i].bbox.extend(p);
+			g.bezier_curves[i].bbox.extend(p);
 		}
 	}
 	for(std::size_t i = 0; i < link_count; ++i)
@@ -264,18 +261,18 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 		{
 			auto [pp0, pp1] = g.graph.mapLinkEndPoints(j);
 			for(std::size_t ii = 0;
-				ii < bezier_curves[i].points.size() - 1; ++ii)
+				ii < g.bezier_curves[i].points.size() - 1; ++ii)
 			{
 				for(std::size_t jj = 0;
-					jj < bezier_curves[j].points.size() - 1; ++jj)
+					jj < g.bezier_curves[j].points.size() - 1; ++jj)
 				{
-					if(!bezier_curves[i].bbox.intersects(bezier_curves[j].bbox))
+					if(!g.bezier_curves[i].bbox.intersects(g.bezier_curves[j].bbox))
 						continue;
 					if(get_line_intersection(
-						bezier_curves[i].points[ii],
-						bezier_curves[i].points[ii + 1],
-						bezier_curves[j].points[jj],
-						bezier_curves[j].points[jj + 1],
+						g.bezier_curves[i].points[ii],
+						g.bezier_curves[i].points[ii + 1],
+						g.bezier_curves[j].points[jj],
+						g.bezier_curves[j].points[jj + 1],
 						g.crosses
 					))
 						g.f_link_crossing -= 100;
@@ -304,19 +301,32 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 		for(std::size_t j = 0; j < node_count; ++j)
 		{
 			auto r = g.graph.mapNodeRegion(j);
-			if(SegmentIntersectRectangle(
-				r.min().x(), r.min().y(),
-				r.max().x(), r.max().y(),
-				p0.x(), p0.y(), p1.x(), p1.y()
-			))
-				g.f_link_node_crossing -= 100;
+			// the curve cannot intersect with this node
+			if(!g.bezier_curves[i].bbox.intersects(r))
+				continue;
+			for(std::size_t ii = 0;
+				ii < g.bezier_curves[i].points.size() - 1; ++ii)
+			{
+				if(SegmentIntersectRectangle(
+					r.min().x(), r.min().y(),
+					r.max().x(), r.max().y(),
+					g.bezier_curves[i].points[ii].x(),
+					g.bezier_curves[i].points[ii].y(),
+					g.bezier_curves[i].points[ii + 1].x(),
+					g.bezier_curves[i].points[ii + 1].y()
+				))
+				{
+					g.f_link_node_crossing -= 100;
+					break;
+				}
+			}
 		}
 	}
 	fit = g.f_overlap
 		+ g.f_link_pos
 		+ g.f_link_angle
-		+ g.f_link_crossing;
-		// + g.f_link_node_crossing;
+		+ g.f_link_crossing
+		+ g.f_link_node_crossing;
 	/*for(auto &&l : base_graph->links)
 	{
 		auto [n0, p0, n1, p1] = base_graph->mapLink(l);
@@ -462,34 +472,43 @@ void PortGraphObserver::draw(const Clock &clock)
 		}
 		SetCursorPos({ 0, 0 });
 		const ImVec2 p = GetCursorScreenPos();
+		const auto scr = [p](const Vector2f &v) {
+			return ImVec2 { v.x() + p.x, v.y() + p.y };
+		};
 		for(std::size_t i = 0; i < b.links.size(); ++i)
 		{
 			auto [p0, p1] = g.mapLinkEndPoints(i);
 			auto [a, b, c, d] = getBezierControlPoints(p0, p1, (Vector2f&)p);
-			// std::vector<Vector2f> points = {
-			// 	{ p0.x() + p.x, p0.y() + p.y }
-			// };
-			//
-			// PathBezierToCasteljau(points,
-			// 	a,b,c,d, 0.990f, 0);
-			// for(std::size_t j = 0; j < points.size() - 1; ++j)
-			// {
-			// 	draw_list->AddLine(
-			// 		{ points[j].x(), points[j].y() },
-			// 		{ points[j+1].x(), points[j+1].y() },
-			// 		IM_COL32(47, 79, 79, 200),
-			// 		(float)j + 1.f
-			// 	);
-			//
-			// }
-			draw_list->AddBezierCurve(
-				(ImVec2&)a,
-				(ImVec2&)b,
-				(ImVec2&)c,
-				(ImVec2&)d,
-				IM_COL32(47, 79, 79, 200),
-				2//, PortGraphFitness::BEZIER_SEGMENT_COUNT
-			);
+
+			if(mDebugBezierCurves)
+			{
+				auto &curve = show->bezier_curves[i];
+				auto &points = curve.points;
+				draw_list->AddRect(
+					scr(curve.bbox.corner(AlignedBox2f::TopLeft)),
+					scr(curve.bbox.corner(AlignedBox2f::BottomRight)),
+					IM_COL32(0, 255, 255, 128)
+				);
+				for(std::size_t j = 0; j < curve.points.size() - 1; ++j)
+				{
+					draw_list->AddLine(
+						{ points[j].x(), points[j].y() },
+						{ points[j + 1].x(), points[j + 1].y() },
+						IM_COL32(255, 0, 255, 128)
+					);
+				}
+			}
+			else
+			{
+				draw_list->AddBezierCurve(
+					(ImVec2&)a,
+					(ImVec2&)b,
+					(ImVec2&)c,
+					(ImVec2&)d,
+					IM_COL32(47, 79, 79, 200),
+					2//, PortGraphFitness::BEZIER_SEGMENT_COUNT
+				);
+			}
 		}
 		// draw edge crosses
 		for(auto &&c : show->crosses)
@@ -507,6 +526,10 @@ void PortGraphObserver::draw(const Clock &clock)
 		nullptr,
 		ImGuiWindowFlags_HorizontalScrollbar))
 	{
+		if(CollapsingHeader("Debug", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			Checkbox("Debug Bezier Curves", &mDebugBezierCurves);
+		}
 		SliderInt("Generations Per Step", &mStep, 1, 2000);
 		Checkbox("Progress", &mProgress);
 		if(Button("Step"))

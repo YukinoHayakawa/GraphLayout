@@ -22,19 +22,20 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 	float f_link_node_crossing = 0;
 
 	std::vector<Vector2f> crosses;
-};
 
-struct PortGraphFitness
-{
 	static constexpr std::size_t BEZIER_SEGMENT_COUNT = 6;
 	static constexpr std::size_t BEZIER_POINT_COUNT = BEZIER_SEGMENT_COUNT + 1;
-	using value_type = float;
 	struct BezierInfo
 	{
 		std::array<Vector2f, BEZIER_POINT_COUNT> points;
 		AlignedBox2f bbox;
 	};
 	std::vector<BezierInfo> bezier_curves;
+};
+
+struct PortGraphFitness
+{
+	using value_type = float;
 
 	value_type operator()(PortGraphIndividual &g);
 };
@@ -83,6 +84,7 @@ class PortGraphObserver
 	bool mProgress = false;
 	int mStep = 100;
 	PortGraphIndividual *mDisplay = nullptr;
+	bool mDebugBezierCurves = false;
 
 	void initPopulation();
 
