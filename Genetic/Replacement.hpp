@@ -60,8 +60,8 @@ struct RoundRobinTournamentReplacement
 				// round-robin competition
 				for(std::size_t j = 0; j < TournamentSize; ++j)
 				{
-					if(o.population[index].fitness >
-						o.population[opponents[j]].fitness)
+					if(o.population[opponents[j]].fitness <
+						o.population[index].fitness)
 						++results[index].wins;
 				}
 			});
