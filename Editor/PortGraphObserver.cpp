@@ -309,17 +309,24 @@ PortGraphFitness::value_type PortGraphFitness::operator()(
 			for(std::size_t ii = 0;
 				ii < g.bezier_curves[i].points.size() - 1; ++ii)
 			{
-				if(SegmentIntersectRectangle(
-					r.min().x(), r.min().y(),
-					r.max().x(), r.max().y(),
-					g.bezier_curves[i].points[ii].x(),
-					g.bezier_curves[i].points[ii].y(),
-					g.bezier_curves[i].points[ii + 1].x(),
-					g.bezier_curves[i].points[ii + 1].y()
-				))
+				const std::pair<
+					AlignedBox2f::CornerType, AlignedBox2f::CornerType
+				> box_edges[] = {
+					{ AlignedBox2f::TopLeft, AlignedBox2f::TopRight },
+					{ AlignedBox2f::BottomLeft, AlignedBox2f::BottomRight },
+					{ AlignedBox2f::TopLeft, AlignedBox2f::BottomLeft },
+					{ AlignedBox2f::TopRight, AlignedBox2f::BottomRight },
+				};
+				for(auto &&e : box_edges)
 				{
-					g.f_link_node_crossing -= 100;
-					break;
+					if(get_line_intersection(
+						g.bezier_curves[i].points[ii],
+						g.bezier_curves[i].points[ii + 1],
+						r.corner(e.first),
+						r.corner(e.second),
+						g.crosses
+					))
+						g.f_link_node_crossing -= 100;
 				}
 			}
 		}
