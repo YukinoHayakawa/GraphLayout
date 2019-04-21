@@ -112,7 +112,9 @@ bool get_line_intersection(
 	if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
 	{
 		const Vector2f x = p0 + t * s1;
-		if(x == p0 || x == p1 || x == p2 || x == p3) return false;
+		// sometimes we have crossing exactly at segment crossing,
+		// so cannot do this.
+		// if(x == p0 || x == p1 || x == p2 || x == p3) return false;
 		crosses.push_back(x);
 		return true;
 	}
@@ -452,6 +454,11 @@ void PortGraphObserver::draw(const Clock &clock)
 		auto &b = *g.base_graph;
 		auto draw_list = GetWindowDrawList();
 
+		SetCursorPos({ 0, 0 });
+		const ImVec2 p = GetCursorScreenPos();
+		const auto scr = [p](const Vector2f &v) {
+			return ImVec2 { v.x() + p.x, v.y() + p.y };
+		};
 		for(std::size_t i = 0; i < b.nodes.size(); ++i)
 		{
 			auto &n = b.node(i);
@@ -461,6 +468,23 @@ void PortGraphObserver::draw(const Clock &clock)
 				n.prototype->name.c_str(), i).c_str(),
 				{ r.sizes().x(), r.sizes().y() }
 			);
+			if(mShowPorts)
+			{
+				for(auto &&port : n.prototype->out_ports)
+				{
+					draw_list->AddCircleFilled(
+						scr(n.prototype->portPosition(port, g.mapNodePosition(i))),
+						5, IM_COL32(72, 61, 139, 200)
+					);
+				}
+				for(auto &&port : n.prototype->in_ports)
+				{
+					draw_list->AddCircleFilled(
+						scr(n.prototype->portPosition(port, g.mapNodePosition(i))),
+						5, IM_COL32(72, 61, 139, 200)
+					);
+				}
+			}
 			if(IsItemActive() && IsMouseDragging())
 			{
 				g.node_positions[i] += Vector2f {
@@ -470,17 +494,13 @@ void PortGraphObserver::draw(const Clock &clock)
 			}
 			// todo draw ports
 		}
-		SetCursorPos({ 0, 0 });
-		const ImVec2 p = GetCursorScreenPos();
-		const auto scr = [p](const Vector2f &v) {
-			return ImVec2 { v.x() + p.x, v.y() + p.y };
-		};
+
 		for(std::size_t i = 0; i < b.links.size(); ++i)
 		{
 			auto [p0, p1] = g.mapLinkEndPoints(i);
 			auto [a, b, c, d] = getBezierControlPoints(p0, p1, (Vector2f&)p);
 
-			if(mDebugBezierCurves)
+			if(mShowDebugBezierCurves)
 			{
 				auto &curve = show->bezier_curves[i];
 				auto &points = curve.points;
@@ -492,8 +512,7 @@ void PortGraphObserver::draw(const Clock &clock)
 				for(std::size_t j = 0; j < curve.points.size() - 1; ++j)
 				{
 					draw_list->AddLine(
-						{ points[j].x(), points[j].y() },
-						{ points[j + 1].x(), points[j + 1].y() },
+						scr(points[j]), scr(points[j + 1]),
 						IM_COL32(255, 0, 255, 128)
 					);
 				}
@@ -511,13 +530,16 @@ void PortGraphObserver::draw(const Clock &clock)
 			}
 		}
 		// draw edge crosses
-		for(auto &&c : show->crosses)
+		if(mShowCrossings)
 		{
-			Vector2f center = c + (Vector2f&)p;
-			draw_list->AddCircle(
-				(const ImVec2&)center,
-				2, IM_COL32(255, 0, 0, 255), 4
-			);
+			for(auto &&c : show->crosses)
+			{
+				Vector2f center = c + (Vector2f&)p;
+				draw_list->AddCircle(
+					(const ImVec2&)center,
+					2, IM_COL32(255, 0, 0, 255), 4
+				);
+			}
 		}
 	}
 	End();
@@ -528,7 +550,9 @@ void PortGraphObserver::draw(const Clock &clock)
 	{
 		if(CollapsingHeader("Debug", ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			Checkbox("Debug Bezier Curves", &mDebugBezierCurves);
+			Checkbox("Show Debug Bezier Curves", &mShowDebugBezierCurves);
+			Checkbox("Show Crossings", &mShowCrossings);
+			Checkbox("Show Ports", &mShowPorts);
 		}
 		SliderInt("Generations Per Step", &mStep, 1, 2000);
 		Checkbox("Progress", &mProgress);

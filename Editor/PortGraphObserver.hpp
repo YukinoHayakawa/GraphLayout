@@ -84,7 +84,9 @@ class PortGraphObserver
 	bool mProgress = false;
 	int mStep = 100;
 	PortGraphIndividual *mDisplay = nullptr;
-	bool mDebugBezierCurves = false;
+	bool mShowDebugBezierCurves = false;
+	bool mShowPorts = true;
+	bool mShowCrossings = false;
 
 	void initPopulation();
 
