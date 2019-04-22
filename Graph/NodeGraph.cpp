@@ -39,12 +39,13 @@ usagi::node_graph::NodeGraph usagi::node_graph::NodeGraph::readFromFile(
 		{
 			std::size_t id;
 			std::size_t proto;
-			in >> id >> proto;
+			std::string name;
+			in >> id >> proto >> std::quoted(name);
 			assert(g.nodes.size() == id);
 			assert(proto < g.prototypes.size());
-			g.nodes.emplace_back(&g.prototypes[proto]);
-			LOG(info, "Node: #{} <- {}",
-				id, g.prototypes[proto].name
+			g.nodes.emplace_back(&g.prototypes[proto], name);
+			LOG(info, "Node: #{}({}) <- {}",
+				id, name, g.prototypes[proto].name
 			);
 		}
 		else if(buf == "link")

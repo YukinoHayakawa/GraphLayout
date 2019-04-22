@@ -123,9 +123,11 @@ struct NodePrototype
 struct Node
 {
 	NodePrototype *prototype = nullptr;
+	std::string name;
 
-	Node(NodePrototype *prototype)
+	Node(NodePrototype *prototype, std::string name)
 		: prototype(prototype)
+		, name(std::move(name))
 	{
 	}
 };

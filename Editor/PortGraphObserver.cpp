@@ -412,7 +412,7 @@ void PortGraphObserver::draw(const Clock &clock)
 			auto r = g.mapNodeRegion(i);
 			SetCursorPos({ r.min().x(), r.min().y() });
 			Button(fmt::format("{}##{}",
-				n.prototype->name.c_str(), i).c_str(),
+				n.name.empty() ? n.prototype->name.c_str() : n.name.c_str(), i).c_str(),
 				{ r.sizes().x(), r.sizes().y() }
 			);
 			if(mShowPorts)
