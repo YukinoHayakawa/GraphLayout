@@ -358,12 +358,12 @@ void PortGraphObserver::loadGraph(const std::filesystem::path &filename)
 {
 	using namespace node_graph;
 
-	mOptimizer.generator.prototype =
+	auto &graph = mOptimizer.generator.prototype =
 		NodeGraph::readFromFile(mGraphPath / filename);
 	mCurrentGraph = filename;
 
 	const auto domain = std::uniform_real_distribution<float> {
-		0.f, 1200.f
+		0.f, (mCanvasSize = graph.size.x())
 	};
 	mOptimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
@@ -406,6 +406,9 @@ void PortGraphObserver::draw(const Clock &clock)
 		const auto scr = [p](const Vector2f &v) {
 			return ImVec2 { v.x() + p.x, v.y() + p.y };
 		};
+		draw_list->AddRect(
+			scr({ 0, 0 }), scr({ mCanvasSize, mCanvasSize }),
+			IM_COL32(205, 92, 92, 255));
 		for(std::size_t i = 0; i < b.nodes.size(); ++i)
 		{
 			auto &n = b.node(i);
@@ -497,6 +500,7 @@ void PortGraphObserver::draw(const Clock &clock)
 	{
 		if(CollapsingHeader("Graphs", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			SliderFloat("Canvas Size", &mCanvasSize, 500, 3000);
 			for(auto &&p : std::filesystem::directory_iterator(mGraphPath))
 			{
 				auto name = p.path().filename();

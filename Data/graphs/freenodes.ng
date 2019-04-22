@@ -1,3 +1,5 @@
+canvas 1200 1200
+
 #       id      displayname         width   height  inpins  outpins
 proto   0       "Single Color"      100     100     0       1
 proto   1       "RGBA Color"        100     120     0       5

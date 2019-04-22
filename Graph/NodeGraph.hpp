@@ -158,6 +158,7 @@ struct NodeGraph
 	std::vector<NodePrototype> prototypes;
 	std::vector<Node> nodes;
 	std::vector<Link> links;
+	Vector2f size { 1000, 1000 };
 
 	const Node & node(std::size_t i) const
 	{

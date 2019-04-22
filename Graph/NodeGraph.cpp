@@ -19,6 +19,11 @@ usagi::node_graph::NodeGraph usagi::node_graph::NodeGraph::readFromFile(
 		{
 			std::getline(in, buf);
 		}
+		else if(buf == "canvas")
+		{
+			in >> g.size.x() >> g.size.y();
+			LOG(info, "Canvas Size: {}, {}", g.size.x(), g.size.y());
+		}
 		else if(buf == "proto")
 		{
 			std::size_t id;

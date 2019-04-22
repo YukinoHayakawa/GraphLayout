@@ -1,0 +1,91 @@
+canvas 1500 1000
+
+#       id      displayname         width   height  inpins  outpins
+proto   0       "Constant"          65 65 0 1
+proto   1       "ConstantMid"       100 65 0 1
+proto   2       "ConstantWide"      175 65 0 1
+proto   3       "OutputWide"        175 65 1 0
+proto   4       "-"                 65 65 1 1
+proto   5       "FBY"               65 65 1 1
+proto   6       "<="                65 65 2 1
+proto   7       ">"                 65 65 2 1
+proto   8       "<"                 65 65 2 1
+proto   9       "/"                 65 65 2 1
+proto   10      "*"                 65 65 2 1
+proto   11      "*"                 65 80 3 1
+proto   12      "+"                 65 65 2 1
+proto   13      "+"                 65 100 4 1
+proto   14      "switch"            85 65 3 1
+proto   15      "sub"               65 65 2 1
+
+#       id      proto   name
+node    0       0       "Torq"
+node    1       0       "1.0"
+node    2       6       ""
+node    3       0       "150.0"
+node    4       0       "0.0"
+node    5       0       "Brake"
+node    6       1       "KBRAKE"
+node    7       0       "0.3"
+node    8       0       "2.5"
+node    9       5       ""
+node    10      14      ""
+node    11      10      ""
+node    12      11      ""
+node    13      10      ""
+node    14      0       "0.1"
+node    15      13      ""
+node    16      0       "0.0"
+node    17      7       ""
+node    18      0       "-0.1"
+node    19      4       ""
+node    20      14      ""
+node    21      8       ""
+node    22      14      ""
+node    23      15      ""
+node    24      1       "TCYCLE"
+node    25      2       "VehicleDynamic"
+node    26      11      ""
+node    27      1       "MASSE"
+node    28      9       ""
+node    29      12      ""
+node    30      3       "VehicleSpeed"
+
+#       outnode outpin  innode  inpin
+link    0       0       23      0
+link    0       0       2       0
+link    1       0       2       1
+link    2       0       10      2
+link    3       0       10      0
+link    4       0       10      1
+link    5       0       11      0
+link    6       0       11      1
+link    7       0       12      2
+link    8       0       13      1
+link    9       0       12      0
+link    9       0       12      1
+link    9       0       17      0
+link    9       0       21      0
+link    9       0       29      1
+link    10      0       15      0
+link    11      0       15      1
+link    12      0       15      2
+link    13      0       15      3
+link    14      0       17      1
+link    15      0       19      0
+link    15      0       20      0
+link    16      0       20      1
+link    17      0       20      1
+link    18      0       21      1
+link    19      0       22      0
+link    20      0       22      1
+link    21      0       22      2
+link    22      0       23      1
+link    23      0       26      0
+link    24      0       26      1
+link    25      0       26      2
+link    26      0       28      0
+link    27      0       28      1
+link    28      0       29      0
+link    29      0       30      0
+link    29      0       9       0

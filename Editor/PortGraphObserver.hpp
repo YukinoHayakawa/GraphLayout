@@ -94,6 +94,7 @@ class PortGraphObserver
 	bool mShowDebugBezierCurves = false;
 	bool mShowPorts = true;
 	bool mShowCrossings = false;
+	float mCanvasSize = 1200;
 	std::filesystem::path mGraphPath = "Data/graphs";
 	std::filesystem::path mCurrentGraph = "Data/graphs";
 
