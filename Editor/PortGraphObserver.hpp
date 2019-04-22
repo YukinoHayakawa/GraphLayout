@@ -38,6 +38,8 @@ struct PortGraphFitness
 {
 	using FitnessT = float;
 
+	bool center_graph = false;
+	int grid = 1;
 	float p_max_angle = 60;
 	float p_min_pos_x = 50;
 

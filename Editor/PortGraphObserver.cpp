@@ -212,6 +212,27 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	float fit = 0;
 	auto *base_graph = g.graph.base_graph;
 
+	// centers graph
+	if(center_graph)
+	{
+		const auto center = g.graph.base_graph->size.x() * 0.5f;
+		const auto sum = std::accumulate(
+			g.genotype.begin(), g.genotype.end(), 0.f);
+		const auto mean = sum / g.genotype.size();
+		std::transform(
+			g.genotype.begin(), g.genotype.end(),
+			g.genotype.begin(),
+			[=](float v) { return v - mean + center; });
+	}
+
+	if(grid != 1)
+	{
+		std::transform(
+			g.genotype.begin(), g.genotype.end(),
+			g.genotype.begin(),
+			[this](float v) { return std::floor(v / grid) * grid; });
+	}
+
 	g.f_overlap = 0;
 	g.f_link_pos = 0;
 	g.f_link_angle = 0;
@@ -242,7 +263,7 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	g.crosses.clear();
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
-		auto[p0, p1] = g.graph.mapLinkEndPoints(i);
+		auto [p0, p1] = g.graph.mapLinkEndPoints(i);
 		// bezier_points[i].clear();
 		auto [a, b, c, d] = getBezierControlPoints(p0, p1, Vector2f::Zero());
 		// PathBezierToCasteljau(bezier_points[i], a, b, c, d);
@@ -520,6 +541,8 @@ void PortGraphObserver::draw(const Clock &clock)
 		}
 		if(CollapsingHeader("Parameters", ImGuiTreeNodeFlags_DefaultOpen))
 		{
+			SliderInt("Grid Size", &mOptimizer.fitness.grid, 1, 100);
+			Checkbox("Centers Graph", &mOptimizer.fitness.center_graph);
 			SliderFloat("Max Angle",
 				&mOptimizer.fitness.p_max_angle,
 				0, 180);
