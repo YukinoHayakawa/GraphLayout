@@ -354,71 +354,13 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	return fit;
 }
 
-PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
-	: Element(parent, std::move(name))
+void PortGraphObserver::loadGraph(const std::filesystem::path &filename)
 {
-	addComponent(static_cast<ImGuiComponent*>(this));
-
 	using namespace node_graph;
-	static NodePrototype color { "Single Color", { 100, 100 }, 0, 1 };
-	static NodePrototype color4 { "RGBA Color", { 100, 120 }, 0, 5 };
-	static NodePrototype constant { "Constant", { 50, 50 }, 0, 1 };
-	static NodePrototype add { "Add", { 60, 60 }, 2, 1 };
-	static NodePrototype multiply { "Multiply", { 60, 60 }, 2, 1 };
-	static NodePrototype divide { "Divide", { 60, 60 }, 2, 1 };
-	static NodePrototype condition { "If", { 70, 110 }, 5, 1 };
-	static NodePrototype shader { "Shader", { 110, 320 }, 17, 0 };
 
-	auto &g = mOptimizer.generator.prototype;
-	g.nodes.emplace_back(&constant); // 0
-	g.nodes.emplace_back(&constant); // 1
-	g.nodes.emplace_back(&constant); // 2
-	g.nodes.emplace_back(&constant); // 3
-	g.nodes.emplace_back(&constant); // 4
-	g.nodes.emplace_back(&constant); // 5
-	g.nodes.emplace_back(&constant); // 6
-	g.nodes.emplace_back(&constant); // 7
-	g.nodes.emplace_back(&constant); // 8
-	g.nodes.emplace_back(&divide); // 9
-	g.nodes.emplace_back(&add); // 10
-	g.nodes.emplace_back(&condition); // 11
-	g.nodes.emplace_back(&condition); // 12
-	g.nodes.emplace_back(&condition); // 13
-	g.nodes.emplace_back(&condition); // 14
-	g.nodes.emplace_back(&color); // 15
-	g.nodes.emplace_back(&color4); // 16
-	g.nodes.emplace_back(&shader); // 17
-	g.nodes.emplace_back(&multiply); // 18
-	g.nodes.emplace_back(&color4); // 19
-
-	g.links.emplace_back(0,0,9,0);
-	g.links.emplace_back(9,0,10,1);
-	g.links.emplace_back(1,0,10,0);
-	g.links.emplace_back(10,0,11,2);
-	g.links.emplace_back(1,0,11,0);
-	g.links.emplace_back(2,0,11,1);
-	g.links.emplace_back(2,0,11,3);
-	g.links.emplace_back(2,0,11,4);
-	g.links.emplace_back(1,0,13,0);
-	g.links.emplace_back(1,0,14,0);
-	g.links.emplace_back(16,0,12,2);
-	g.links.emplace_back(15,0,12,3);
-	g.links.emplace_back(15,0,12,4);
-	g.links.emplace_back(11,0,12,0);
-	g.links.emplace_back(19,1,12,1);
-	g.links.emplace_back(19,1,14,1);
-	g.links.emplace_back(3,0,14,2);
-	g.links.emplace_back(4,0,14,3);
-	g.links.emplace_back(4,0,14,4);
-	g.links.emplace_back(8,0,17,0);
-	g.links.emplace_back(12,0,18,0);
-	g.links.emplace_back(7,0,18,1);
-	g.links.emplace_back(18,0,17,4);
-	g.links.emplace_back(14,0,13,1);
-	g.links.emplace_back(6,0,13,2);
-	g.links.emplace_back(5,0,13,3);
-	g.links.emplace_back(5,0,13,4);
-	g.links.emplace_back(13,0,17,5);
+	mOptimizer.generator.prototype =
+		NodeGraph::readFromFile(mGraphPath / filename);
+	mCurrentGraph = filename;
 
 	const auto domain = std::uniform_real_distribution<float> {
 		0.f, 1200.f
@@ -430,6 +372,14 @@ PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
 	// todo prevent the graph from going off-center
 
 	initPopulation();
+}
+
+PortGraphObserver::PortGraphObserver(Element *parent, std::string name)
+	: Element(parent, std::move(name))
+{
+	addComponent(static_cast<ImGuiComponent*>(this));
+
+	loadGraph("default.ng");
 }
 
 void PortGraphObserver::initPopulation()
@@ -545,6 +495,19 @@ void PortGraphObserver::draw(const Clock &clock)
 		nullptr,
 		ImGuiWindowFlags_HorizontalScrollbar))
 	{
+		if(CollapsingHeader("Graphs", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			for(auto &&p : std::filesystem::directory_iterator(mGraphPath))
+			{
+				auto name = p.path().filename();
+				if(Selectable(
+					name.u8string().c_str(), name == mCurrentGraph,
+					ImGuiSelectableFlags_AllowDoubleClick) && IsMouseDoubleClicked(0))
+				{
+					loadGraph(name);
+				}
+			}
+		}
 		if(CollapsingHeader("Debug", ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			Checkbox("Show Debug Bezier Curves", &mShowDebugBezierCurves);

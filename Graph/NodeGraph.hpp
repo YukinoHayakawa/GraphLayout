@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <Usagi/Core/Math.hpp>
+#include <filesystem>
 
 namespace usagi::node_graph
 {
@@ -152,6 +153,7 @@ struct Link
 
 struct NodeGraph
 {
+	std::vector<NodePrototype> prototypes;
 	std::vector<Node> nodes;
 	std::vector<Link> links;
 
@@ -178,6 +180,8 @@ struct NodeGraph
 			std::ref(n1), std::ref(p1)
 		);
 	}
+
+	static NodeGraph readFromFile(const std::filesystem::path &path);
 };
 
 struct PortGraph

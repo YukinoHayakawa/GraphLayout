@@ -1,0 +1,46 @@
+#       id      displayname         width   height  inpins  outpins
+proto   0       "Single Color"      100     100     0       1
+proto   1       "RGBA Color"        100     120     0       5
+proto   2       "Constant"          50      50      0       1
+proto   3       "Add"               60      60      2       1
+proto   4       "Multiply"          60      60      2       1
+proto   5       "Divide"            60      60      2       1
+proto   6       "If"                70      110     5       1
+proto   7       "Shader"            110     320     17      0
+
+
+#       id      proto
+node    0       2
+node    1       2
+node    2       2
+node    3       2
+node    4       2
+node    5       2
+node    6       2
+node    7       2
+node    8       2
+node    9       5
+node    10      3
+node    11      6
+node    12      6
+node    13      6
+node    14      6
+node    15      0
+node    16      1
+node    17      7
+node    18      4
+node    19      1
+
+#       outnode outpin  innode  inpin
+link    0       0       9       0
+link    9       0       10      1
+link    1       0       10      0
+link    10      0       11      2
+link    1       0       11      0
+link    2       0       11      1
+link    2       0       11      3
+link    2       0       11      4
+link    1       0       13      0
+link    1       0       14      0
+link    16      0       12      2
+link    15      0       12      3

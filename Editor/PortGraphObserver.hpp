@@ -73,7 +73,7 @@ class PortGraphObserver
 	using Gene = float;
 	using Genotype = std::vector<float>;
 
-	genetic::GeneticOptimizer<
+	using OptimizerT = genetic::GeneticOptimizer<
 		Gene,
 		PortGraphFitness,
 		genetic::parent::TournamentParentSelection<5, 2>,
@@ -83,7 +83,10 @@ class PortGraphObserver
 		PortGraphPopulationGenerator,
 		Genotype,
 		PortGraphIndividual
-	> mOptimizer;
+	>;
+
+	std::vector<OptimizerT> mOptimizers;
+	OptimizerT mOptimizer;
 
 	bool mProgress = false;
 	int mStep = 100;
@@ -91,7 +94,10 @@ class PortGraphObserver
 	bool mShowDebugBezierCurves = false;
 	bool mShowPorts = true;
 	bool mShowCrossings = false;
+	std::filesystem::path mGraphPath = "Data/graphs";
+	std::filesystem::path mCurrentGraph = "Data/graphs";
 
+	void loadGraph(const std::filesystem::path &filename);
 	void initPopulation();
 
 public:
