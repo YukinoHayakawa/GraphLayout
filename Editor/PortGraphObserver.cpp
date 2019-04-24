@@ -303,6 +303,7 @@ void PortGraphObserver::initPopulation()
 
 void PortGraphObserver::performRandomizedTest(int node_amount)
 {
+	if(!mContinueTests) return;
 	assert(node_amount >= 0);
 
 	LOG(info, "Starting randomized test with {} nodes", node_amount);
@@ -350,6 +351,8 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 	// for each random graph, create random links
 	for(int i = 0; i < mTest.generation; ++i)
 	{
+		if(!mContinueTests) goto abort;
+
 		proto.links.clear();
 		// generate random links
 		for(int j = 0; j < pin_count; ++j)
@@ -362,6 +365,8 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 		// repeat optimization process
 		for(int j = 0; j < mTest.repeat; ++j)
 		{
+			if(!mContinueTests) goto abort;
+
 			optimizer.initializePopulation(mTest.population);
 
 			const auto begin_time = std::chrono::high_resolution_clock::now();
@@ -398,13 +403,16 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 			}
 			else
 			{
-				LOG(info, "Test with {} nodes aborted.", node_amount);
-				return;
+				goto abort;
 			}
 		}
 	}
 
 	LOG(info, "Finished randomized test with {} nodes", node_amount);
+	return;
+
+abort:
+	LOG(info, "Test with {} nodes aborted.", node_amount);
 }
 
 // https://stackoverflow.com/questions/9094422/how-to-check-if-a-stdthread-is-still-running
