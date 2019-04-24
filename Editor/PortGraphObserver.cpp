@@ -317,9 +317,10 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 	OptimizerT optimizer;
 	auto &proto = optimizer.generator.prototype;
 
+	const auto canvas_size = mTest.canvas_size_per_node * node_amount;
 	// set canvas size proportionate to the amount of nodes
 	const auto domain = std::uniform_real_distribution<float> {
-		0.f, mTest.canvas_size_per_node
+		0.f, canvas_size
 	};
 	optimizer.generator.domain = domain;
 	// proportional to canvas size of node graph
@@ -377,14 +378,15 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 				= end_time - begin_time;
 			LOG(info, "{} nodes: graph {}, opti {}, time {}",
 				node_amount, i, j, delta_time.count());
-			// nodes, links, unit_canvas, ports, connection_rate,
+			// nodes, links, unit_canvas, canvas, ports, connection_rate,
 			// population, finish_iterations, time, fitness,
 			// edge_crossings, edge_node_crossings
 			fmt::print(log,
-				"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+				"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
 				proto.nodes.size(),
 				proto.links.size(),
 				mTest.canvas_size_per_node,
+				canvas_size,
 				mTest.pin_amount,
 				mTest.pin_connection_rate,
 				optimizer.population.size(),
