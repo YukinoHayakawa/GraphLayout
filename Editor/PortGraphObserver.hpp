@@ -45,6 +45,10 @@ struct PortGraphFitness
 	float p_max_angle = 60;
 	float p_min_pos_x = 50;
 
+	float node_overlap_penalty = -1000;
+	float edge_crossing_penalty = -100;
+	float edge_node_crossing_penalty = -100;
+
 	FitnessT operator()(PortGraphIndividual &g);
 };
 
@@ -53,15 +57,15 @@ struct RandomTestConfig
 	int start_node_amount = 4;
 	int finish_node_amount = 100;
 	// # of randomly generated graph
-	int generation = 10;
+	int generation = 5;
 	// # of repeated optimization on each generated graph
-	int repeat = 10;
+	int repeat = 5;
 	int population = 100;
 	float canvas_size_per_node = 250;
 
 	int pin_amount = 5;
 	// # of edges / # of nodes
-	float pin_connection_rate = 1;
+	float pin_connection_rate = 2;
 };
 
 struct PortGraphPopulationGenerator

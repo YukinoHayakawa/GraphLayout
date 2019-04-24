@@ -140,7 +140,7 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 			auto r1 = g.graph.mapNodeRegion(j);
 			const auto overlapped = r0.intersection(r1);
 			if(!overlapped.isEmpty())
-				g.f_overlap -= 1000;// overlapped.volume();
+				g.f_overlap += node_overlap_penalty;
 		}
 	}
 	// calculate link position
@@ -190,7 +190,7 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 						g.bezier_curves[j].points[jj + 1],
 						g.crosses
 					))
-						g.f_link_crossing -= 100;
+						g.f_link_crossing += edge_crossing_penalty;
 				}
 			}
 		}
@@ -233,7 +233,7 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 						r.corner(e.second),
 						g.crosses
 					))
-						g.f_link_node_crossing -= 100;
+						g.f_link_node_crossing += edge_node_crossing_penalty;
 				}
 			}
 		}
@@ -362,41 +362,45 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 		// repeat optimization process
 		for(int j = 0; j < mTest.repeat; ++j)
 		{
-			if(!mContinueTests)
-			{
-				LOG(info, "Test with {} nodes aborted.", node_amount);
-				break;
-			}
-
 			optimizer.initializePopulation(mTest.population);
 
 			const auto begin_time = std::chrono::high_resolution_clock::now();
-			while(!optimizer.stopCondition())
+			while(mContinueTests && !optimizer.stopCondition())
 				optimizer.step();
 			const auto end_time = std::chrono::high_resolution_clock::now();
 			const std::chrono::duration<double> delta_time
 				= end_time - begin_time;
-			LOG(info, "{} nodes: graph {}, opti {}, time {}",
-				node_amount, i, j, delta_time.count());
 			// nodes, links, unit_canvas, canvas, ports, connection_rate,
 			// population, finish_iterations, time, fitness,
 			// edge_crossings, edge_node_crossings
-			fmt::print(log,
-				"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
-				proto.nodes.size(),
-				proto.links.size(),
-				mTest.canvas_size_per_node,
-				canvas_size,
-				mTest.pin_amount,
-				mTest.pin_connection_rate,
-				optimizer.population.size(),
-				optimizer.year,
-				delta_time.count(),
-				optimizer.best.top()->fitness,
-				optimizer.best.top()->f_link_crossing,
-				optimizer.best.top()->f_link_node_crossing
-			);
-			log << std::endl;
+			if(mContinueTests)
+			{
+				LOG(info, "{} nodes: graph {}, opti {}, time {}",
+					node_amount, i, j, delta_time.count());
+				fmt::print(log,
+					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+					proto.nodes.size(),
+					proto.links.size(),
+					mTest.canvas_size_per_node,
+					canvas_size,
+					mTest.pin_amount,
+					mTest.pin_connection_rate,
+					optimizer.population.size(),
+					optimizer.year,
+					delta_time.count(),
+					optimizer.best.top()->fitness,
+					optimizer.best.top()->f_link_crossing /
+						optimizer.fitness.edge_crossing_penalty,
+					optimizer.best.top()->f_link_node_crossing /
+						optimizer.fitness.edge_node_crossing_penalty
+				);
+				log << std::endl;
+			}
+			else
+			{
+				LOG(info, "Test with {} nodes aborted.", node_amount);
+				return;
+			}
 		}
 	}
 
@@ -580,7 +584,7 @@ void PortGraphObserver::draw(const Clock &clock)
 			SliderInt("Population", &mTest.population,
 				100, 200);
 			SliderFloat("Connection Rate (#Edges/#Nodes)",
-				&mTest.pin_connection_rate, 0, 3);
+				&mTest.pin_connection_rate, 0, 20);
 			SliderFloat("Canvas Size Per Node",
 				&mTest.canvas_size_per_node, 100, 500);
 			using namespace std::chrono_literals;
