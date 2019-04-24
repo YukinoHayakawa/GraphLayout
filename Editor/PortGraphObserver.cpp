@@ -22,6 +22,8 @@ bool get_line_intersection(
 	const Vector2f &p1,
 	const Vector2f &p2,
 	const Vector2f &p3,
+	const Vector2f &ignore0,
+	const Vector2f &ignore1,
 	std::vector<Vector2f> &crosses
 )
 {
@@ -39,6 +41,8 @@ bool get_line_intersection(
 	if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
 	{
 		const Vector2f x = p0 + t * s1;
+		if(x == ignore0) return false;
+		if(x == ignore1) return false;
 		// sometimes we have crossing exactly at segment crossing,
 		// so cannot do this.
 		// if(x == p0 || x == p1 || x == p2 || x == p3) return false;
@@ -188,6 +192,10 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 						g.bezier_curves[i].points[ii + 1],
 						g.bezier_curves[j].points[jj],
 						g.bezier_curves[j].points[jj + 1],
+						// don't count lines starting from the same port
+						g.bezier_curves[i].points.front(),
+						// don't count lines ending at the same port
+						g.bezier_curves[i].points.back(),
 						g.crosses
 					))
 						g.f_link_crossing += edge_crossing_penalty;
@@ -231,6 +239,9 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 						g.bezier_curves[i].points[ii + 1],
 						r.corner(e.first),
 						r.corner(e.second),
+						// don't count line beginning and ending as crossings
+						g.bezier_curves[i].points.front(),
+						g.bezier_curves[i].points.back(),
 						g.crosses
 					))
 						g.f_link_node_crossing += edge_node_crossing_penalty;
