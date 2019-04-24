@@ -4,6 +4,7 @@
 #include <random>
 
 #include "BinaryHeap.hpp"
+#include <Usagi/Core/Logging.hpp>
 
 namespace usagi::genetic
 {
@@ -82,8 +83,15 @@ struct GeneticOptimizer
 
 	// fitness history
 
-	std::vector<FitnessT> fitness_history;
-	FitnessT last_best_fitness;
+	struct FitnessHistory
+	{
+		FitnessT fitness;
+		std::uint32_t year;
+	};
+	std::vector<FitnessHistory> fitness_history;
+	FitnessT last_best_fitness = -10e10f;
+	FitnessT significant_improvement_threshold = 50;
+	std::uint32_t significant_improvement_period = 20'000;
 
 	auto chooseParents()
 	{
@@ -112,6 +120,7 @@ struct GeneticOptimizer
 		population.clear();
 		population.reserve(size);
 		fitness_history.clear();
+		last_best_fitness = -10e10f;
 		for(std::size_t i = 0; i < size; ++i)
 		{
 			population.push_back(generator(*this));
@@ -136,13 +145,33 @@ struct GeneticOptimizer
 			best.modifyKey(individual.queue_index);
 	}
 
+	bool stopCondition()
+	{
+		// don't stop if we even didn't start
+		if(fitness_history.empty()) return false;
+		auto i = fitness_history.rbegin();
+		for(; i != fitness_history.rend(); ++i)
+		{
+			// search for the other end of evaluation interval
+			if(year - i->year >= significant_improvement_period) break;
+		}
+		// if the search went through the whole history, take the first item.
+		if(i == fitness_history.rend()) --i;
+		// continue if we haven't reach iteration limit
+		if(year - i->year < significant_improvement_period)
+			return false;
+		auto improvement = best.top()->fitness - i->fitness;
+		// if no significant improvement within certain evaluation period, stop
+		return improvement < significant_improvement_threshold;
+	}
+
 	auto step()
 	{
 		// track best fitness history
 		assert(!best.empty());
 		if(last_best_fitness < best.top()->fitness)
 		{
-			fitness_history.push_back(best.top()->fitness);
+			fitness_history.push_back({ best.top()->fitness, year });
 			last_best_fitness = best.top()->fitness;
 		}
 

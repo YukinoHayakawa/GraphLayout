@@ -549,6 +549,16 @@ void PortGraphObserver::draw(const Clock &clock)
 			SliderFloat("Min Positive Edge Length X",
 				&mOptimizer.fitness.p_min_pos_x,
 				0, 200);
+			Checkbox("Stop When Reached Termination Condition",
+				&mStopWhenReachedTerminationCondition);
+			SliderFloat("Significant Improvement Threshold",
+				&mOptimizer.significant_improvement_threshold,
+				1, 1000);
+			int period = mOptimizer.significant_improvement_period;
+			SliderInt("Significant Improvement Period",
+				&period,
+				1'000, 100'000);
+			mOptimizer.significant_improvement_period = period;
 		}
 		SliderInt("Generations Per Step", &mStep, 1, 500);
 		Checkbox("Progress", &mProgress);
@@ -562,11 +572,13 @@ void PortGraphObserver::draw(const Clock &clock)
 		{
 			PlotLines(
 				"Best Fitness History",
-				mOptimizer.fitness_history.data(),
+				&mOptimizer.fitness_history.front().fitness,
 				static_cast<int>(mOptimizer.fitness_history.size()),
 				0, nullptr, FLT_MAX, FLT_MAX,
-				{ 0, 300 }
+				{ 0, 300 },
+				sizeof(decltype(mOptimizer.fitness_history.front()))
 			);
+			Text("Should Stop=%d", mOptimizer.stopCondition());
 		}
 		if(CollapsingHeader("Population", ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -574,6 +586,22 @@ void PortGraphObserver::draw(const Clock &clock)
 				mDisplay = nullptr;
 			if(Button("Select Current Best"))
 				mDisplay = mOptimizer.best.top();
+			// show best individual
+			{
+				auto &best = *mOptimizer.best.top();
+				Text(fmt::format("Best: #{} Birth: {}, Family: {}, Gen: {}, Fit: {}[overlap={},link={},angle={},e_cross={},en_cross={}]",
+					best.index,
+					best.birthday,
+					best.family,
+					best.generation,
+					best.fitness,
+					best.f_overlap,
+					best.f_link_pos,
+					best.f_link_angle,
+					best.f_link_crossing,
+					best.f_link_node_crossing
+				).c_str());
+			}
 			for(std::size_t i = 0; i < mOptimizer.population.size(); ++i)
 			{
 				auto &ind = mOptimizer.population[i];
@@ -602,8 +630,11 @@ void PortGraphObserver::draw(const Clock &clock)
 
 	if(mProgress)
 	{
-		for(int i = 0; i < mStep; ++i)
-			mOptimizer.step();
-		// LOG(info, "Best: {}", mOptimizer.best->fitness);
+		if(!(mStopWhenReachedTerminationCondition
+			&& mOptimizer.stopCondition()))
+		{
+			for(int i = 0; i < mStep; ++i)
+				mOptimizer.step();
+		}
 	}
 }
