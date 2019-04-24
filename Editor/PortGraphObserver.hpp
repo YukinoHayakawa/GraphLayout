@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <future>
+
 #include <Usagi/Core/Element.hpp>
 #include <Usagi/Extension/ImGui/ImGuiComponent.hpp>
 #include <GraphLayout/Graph/NodeGraph.hpp>
@@ -46,6 +48,22 @@ struct PortGraphFitness
 	FitnessT operator()(PortGraphIndividual &g);
 };
 
+struct RandomTestConfig
+{
+	int start_node_amount = 4;
+	int finish_node_amount = 100;
+	// # of randomly generated graph
+	int generation = 10;
+	// # of repeated optimization on each generated graph
+	int repeat = 10;
+	int population = 100;
+	float canvas_size_per_node = 250;
+
+	int pin_amount = 5;
+	// # of edges / # of nodes
+	float pin_connection_rate = 1;
+};
+
 struct PortGraphPopulationGenerator
 {
 	node_graph::NodeGraph prototype;
@@ -87,7 +105,6 @@ class PortGraphObserver
 		PortGraphIndividual
 	>;
 
-	std::vector<OptimizerT> mOptimizers;
 	OptimizerT mOptimizer;
 
 	bool mProgress = false;
@@ -100,9 +117,16 @@ class PortGraphObserver
 	bool mStopWhenReachedTerminationCondition = true;
 	std::filesystem::path mGraphPath = "Data/graphs";
 	std::filesystem::path mCurrentGraph = "Data/graphs";
+	std::filesystem::path mTestFolder;
+
+	RandomTestConfig mTest;
+	bool mContinueTests = true;
+	std::future<void> mTestThread;
 
 	void loadGraph(const std::filesystem::path &filename);
 	void initPopulation();
+	void performRandomizedTest(int node_amount);
+	void performRandomizedTests();
 
 public:
 	PortGraphObserver(Element *parent, std::string name);

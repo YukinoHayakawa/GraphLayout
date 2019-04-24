@@ -1,93 +1,20 @@
 ﻿#include "PortGraphObserver.hpp"
 
 #include <fmt/format.h>
+#include <fstream>
 
 #include <Usagi/Extension/ImGui/ImGui.hpp>
+
+#ifdef _WIN32
+#	define WIN32_LEAN_AND_MEAN
+#	include <Windows.h>
+#	undef min
+#	undef max
+#endif
 
 namespace
 {
 using namespace usagi;
-
-// https://stackoverflow.com/questions/99353/how-to-test-if-a-line-segment-intersects-an-axis-aligned-rectange-in-2d
-bool SegmentIntersectRectangle(
-	float a_rectangleMinX,
-	float a_rectangleMinY,
-	float a_rectangleMaxX,
-	float a_rectangleMaxY,
-	float a_p1x,
-	float a_p1y,
-	float a_p2x,
-	float a_p2y)
-{
-	// Find min and max X for the segment
-
-	float minX = a_p1x;
-	float maxX = a_p2x;
-
-	if(a_p1x > a_p2x)
-	{
-		minX = a_p2x;
-		maxX = a_p1x;
-	}
-
-	// Find the intersection of the segment's and rectangle's x-projections
-
-	if(maxX > a_rectangleMaxX)
-	{
-		maxX = a_rectangleMaxX;
-	}
-
-	if(minX < a_rectangleMinX)
-	{
-		minX = a_rectangleMinX;
-	}
-
-	if(minX > maxX) // If their projections do not intersect return false
-	{
-		return false;
-	}
-
-	// Find corresponding min and max Y for min and max X we found before
-
-	float minY = a_p1y;
-	float maxY = a_p2y;
-
-	float dx = a_p2x - a_p1x;
-
-	if(abs(dx) > 0.00001)
-	{
-		float a = (a_p2y - a_p1y) / dx;
-		float b = a_p1y - a * a_p1x;
-		minY = a * minX + b;
-		maxY = a * maxX + b;
-	}
-
-	if(minY > maxY)
-	{
-		float tmp = maxY;
-		maxY = minY;
-		minY = tmp;
-	}
-
-	// Find the intersection of the segment's and rectangle's y-projections
-
-	if(maxY > a_rectangleMaxY)
-	{
-		maxY = a_rectangleMaxY;
-	}
-
-	if(minY < a_rectangleMinY)
-	{
-		minY = a_rectangleMinY;
-	}
-
-	if(minY > maxY) // If Y-projections do not intersect return false
-	{
-		return false;
-	}
-
-	return true;
-}
 
 // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
 bool get_line_intersection(
@@ -122,41 +49,7 @@ bool get_line_intersection(
 	return false;
 }
 
-// imgui
-// http://www.malinc.se/m/DeCasteljauAndBezier.php
-void PathBezierToCasteljau(
-	std::vector<Vector2f> &points,
-	const Vector2f &p1,
-	const Vector2f &p2,
-	const Vector2f &p3,
-	const Vector2f &p4,
-	float tess_tol = 0.99f,
-	int level = 0)
-{
-	if(level == 0) points.emplace_back(p1.x(), p1.y());
-	const auto dx = p4.x() - p1.x();
-	const auto dy = p4.y() - p1.y();
-	const auto d2 = std::abs((p2.x() - p4.x()) * dy - (p2.y() - p4.y()) * dx);
-	const auto d3 = std::abs((p3.x() - p4.x()) * dy - (p3.y() - p4.y()) * dx);
-	if((d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy))
-	{
-		points.emplace_back(p4.x(), p4.y());
-	}
-	else if(level < 5)
-	{
-		const Vector2f p12 = 0.5f * (p1 + p2);
-		const Vector2f p23 = 0.5f * (p2 + p3);
-		const Vector2f p34 = 0.5f * (p4 + p4);
-		const Vector2f p123 = 0.5f * (p12 + p23);
-		const Vector2f p234 = 0.5f * (p23 + p34);
-		const Vector2f p1234 = 0.5f * (p123 + p234);
-		PathBezierToCasteljau(points, p1, p12, p123, p1234,
-			tess_tol, level + 1);
-		PathBezierToCasteljau(points, p1234, p234, p34, p4,
-			tess_tol, level + 1);
-	}
-}
-
+// from imgui
 template <std::size_t I>
 void PathBezierCurveTo(
 	std::array<Vector2f, I> &points,
@@ -181,7 +74,6 @@ void PathBezierCurveTo(
 		);
 	}
 }
-
 
 auto getBezierControlPoints(
 	const Vector2f &p0,
@@ -409,6 +301,144 @@ void PortGraphObserver::initPopulation()
 	mOptimizer.initializePopulation(200);
 }
 
+void PortGraphObserver::performRandomizedTest(int node_amount)
+{
+	assert(node_amount >= 0);
+
+	LOG(info, "Starting randomized test with {} nodes", node_amount);
+	const auto filename = mTestFolder / fmt::format("test_{}.csv", node_amount);
+	std::ofstream log { filename };
+	if(!log)
+	{
+		LOG(error, "Falied to open: {}, aborting test.", filename);
+		return;
+	}
+
+	OptimizerT optimizer;
+	auto &proto = optimizer.generator.prototype;
+
+	// set canvas size proportionate to the amount of nodes
+	const auto domain = std::uniform_real_distribution<float> {
+		0.f, mTest.canvas_size_per_node
+	};
+	optimizer.generator.domain = domain;
+	// proportional to canvas size of node graph
+	optimizer.mutation.domain = domain;
+
+	// create one prototype which we will use through out the test
+	proto.prototypes.emplace_back(
+		std::string {}, Vector2f { 100, 100 },
+		mTest.pin_amount, mTest.pin_amount);
+
+	// insert nodes
+	proto.nodes.assign(
+		node_amount,  { &proto.prototypes.front(), std::string {} }
+	);
+
+	const auto pin_count = int(mTest.pin_connection_rate * node_amount);
+	assert(pin_count >= 0);
+	assert(proto.nodes.size() > 0);
+	const std::uniform_int_distribution<std::size_t> node_dist {
+		0, proto.nodes.size() - 1
+	};
+	assert(mTest.pin_amount > 0);
+	const std::uniform_int_distribution<std::size_t> pin_dist {
+		0, std::size_t(mTest.pin_amount - 1)
+	};
+	std::mt19937 rng { std::random_device()() };
+	// for each random graph, create random links
+	for(int i = 0; i < mTest.generation; ++i)
+	{
+		proto.links.clear();
+		// generate random links
+		for(int j = 0; j < pin_count; ++j)
+		{
+			proto.links.emplace_back(
+				node_dist(rng), pin_dist(rng),
+				node_dist(rng), pin_dist(rng)
+			);
+		}
+		// repeat optimization process
+		for(int j = 0; j < mTest.repeat; ++j)
+		{
+			if(!mContinueTests)
+			{
+				LOG(info, "Test with {} nodes aborted.", node_amount);
+				break;
+			}
+
+			optimizer.initializePopulation(mTest.population);
+
+			const auto begin_time = std::chrono::high_resolution_clock::now();
+			while(!optimizer.stopCondition())
+				optimizer.step();
+			const auto end_time = std::chrono::high_resolution_clock::now();
+			const std::chrono::duration<double> delta_time
+				= end_time - begin_time;
+			LOG(info, "{} nodes: graph {}, opti {}, time {}",
+				node_amount, i, j, delta_time.count());
+			// nodes, links, unit_canvas, ports, connection_rate,
+			// population, finish_iterations, time, fitness,
+			// edge_crossings, edge_node_crossings
+			fmt::print(log,
+				"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+				proto.nodes.size(),
+				proto.links.size(),
+				mTest.canvas_size_per_node,
+				mTest.pin_amount,
+				mTest.pin_connection_rate,
+				optimizer.population.size(),
+				optimizer.year,
+				delta_time.count(),
+				optimizer.best.top()->fitness,
+				optimizer.best.top()->f_link_crossing,
+				optimizer.best.top()->f_link_node_crossing
+			);
+			log << std::endl;
+		}
+	}
+
+	LOG(info, "Finished randomized test with {} nodes", node_amount);
+}
+
+// https://stackoverflow.com/questions/9094422/how-to-check-if-a-stdthread-is-still-running
+void PortGraphObserver::performRandomizedTests()
+{
+	mTestFolder = fmt::format("tests/{}", time(nullptr));
+	create_directories(mTestFolder);
+
+	using namespace std::chrono_literals;
+
+	assert(!mTestThread.valid()
+		|| mTestThread.wait_for(0s) == std::future_status::ready);
+	mTestThread = std::async(std::launch::async, [this] {
+#ifdef _WIN32
+		// keep system responsive while running computation intensive task
+		LOG(info, "Setting process priority to low.");
+		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
+#endif
+		std::vector<int> indices;
+		indices.reserve(mTest.finish_node_amount - mTest.start_node_amount + 1);
+		for(auto i = mTest.start_node_amount;
+			i <= mTest.finish_node_amount; ++i)
+		{
+			indices.emplace_back(i);
+		}
+		LOG(info, "Launching test threads...");
+		std::for_each(
+			std::execution::par,
+			indices.begin(), indices.end(), [this](auto i) {
+				performRandomizedTest(i);
+			}
+		);
+
+#ifdef _WIN32
+		LOG(info, "Restoring process priority to normal.");
+		SetPriorityClass(GetCurrentProcess(), NORMAL_PRIORITY_CLASS);
+#endif
+	});
+}
+
 void PortGraphObserver::draw(const Clock &clock)
 {
 	using namespace ImGui;
@@ -530,6 +560,40 @@ void PortGraphObserver::draw(const Clock &clock)
 					ImGuiSelectableFlags_AllowDoubleClick) && IsMouseDoubleClicked(0))
 				{
 					loadGraph(name);
+				}
+			}
+		}
+		if(CollapsingHeader("Test", ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			SliderInt("Start Node Amount", &mTest.start_node_amount,
+				1, 200);
+			SliderInt("Finish Node Amount", &mTest.finish_node_amount,
+				mTest.start_node_amount, 200);
+			SliderInt("# Graph", &mTest.generation,
+				1, 20);
+			SliderInt("# Optimization", &mTest.repeat,
+				1, 20);
+			SliderInt("Amount of Ports", &mTest.pin_amount,
+				1, 20);
+			SliderInt("Population", &mTest.population,
+				100, 200);
+			SliderFloat("Connection Rate (#Edges/#Nodes)",
+				&mTest.pin_connection_rate, 0, 3);
+			SliderFloat("Canvas Size Per Node",
+				&mTest.canvas_size_per_node, 100, 500);
+			using namespace std::chrono_literals;
+			if(!mTestThread.valid() || mTestThread.wait_for(0s) == std::future_status::ready)
+			{
+				if(Button("Launch Tests"))
+					performRandomizedTests();
+			}
+			else
+			{
+				if(Button("Abort Tests"))
+				{
+					mContinueTests = false;
+					mTestThread.wait();
+					mContinueTests = true;
 				}
 			}
 		}
