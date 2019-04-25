@@ -388,13 +388,13 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 				= end_time - begin_time;
 			// nodes, links, unit_canvas, canvas, ports, connection_rate,
 			// population, finish_iterations, time, fitness,
-			// edge_crossings, edge_node_crossings
+			// edge_crossings, edge_node_crossings, overlap
 			if(mContinueTests)
 			{
 				LOG(info, "{} nodes: graph {}, opti {}, time {}",
 					node_amount, i, j, delta_time.count());
 				fmt::print(log,
-					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
 					proto.nodes.size(),
 					proto.links.size(),
 					mTest.canvas_size_per_node,
@@ -408,7 +408,9 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 					optimizer.best.top()->f_link_crossing /
 						optimizer.fitness.edge_crossing_penalty,
 					optimizer.best.top()->f_link_node_crossing /
-						optimizer.fitness.edge_node_crossing_penalty
+						optimizer.fitness.edge_node_crossing_penalty,
+					optimizer.best.top()->f_overlap /
+						optimizer.fitness.node_overlap_penalty
 				);
 				log << std::endl;
 			}
