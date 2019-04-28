@@ -23,6 +23,8 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>>
 	float f_link_angle = 0;
 	float f_link_crossing = 0;
 	float f_link_node_crossing = 0;
+	int c_angle = 0;
+	int c_invert_pos = 0;
 
 	std::vector<Vector2f> crosses;
 

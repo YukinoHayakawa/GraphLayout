@@ -134,6 +134,8 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	g.f_link_angle = 0;
 	g.f_link_crossing = 0;
 	g.f_link_node_crossing = 0;
+	g.c_angle = 0;
+	g.c_invert_pos = 0;
 	// calculate overlapped area
 	const auto node_count = base_graph->nodes.size();
 	for(std::size_t i = 0; i < node_count; ++i)
@@ -210,9 +212,13 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 		const auto angle = std::acos(normalized_edge.dot(Vector2f::UnitX()));
 		// output port is to the left of input port
 		g.f_link_pos += std::min(edge_diff.x(), p_min_pos_x);
+		if(edge_diff.x() < p_min_pos_x)
+			++g.c_invert_pos;
 		// prefer smaller angle
 		const auto deg_angle = radiansToDegrees(angle);
 		g.f_link_angle -= std::max(p_max_angle, deg_angle);
+		if(deg_angle > p_max_angle)
+			++g.c_angle;
 
 		// estimate bezier and node intersections
 		for(std::size_t j = 0; j < node_count; ++j)
@@ -388,13 +394,14 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 				= end_time - begin_time;
 			// nodes, links, unit_canvas, canvas, ports, connection_rate,
 			// population, finish_iterations, time, fitness,
-			// edge_crossings, edge_node_crossings, overlap
+			// edge_crossings, edge_node_crossings, overlap,
+			// c_invert_pos, f_link_pos, c_angle, f_link_angle
 			if(mContinueTests)
 			{
 				LOG(info, "{} nodes: graph {}, opti {}, time {}",
 					node_amount, i, j, delta_time.count());
 				fmt::print(log,
-					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
 					proto.nodes.size(),
 					proto.links.size(),
 					mTest.canvas_size_per_node,
@@ -410,7 +417,11 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 					optimizer.best.top()->f_link_node_crossing /
 						optimizer.fitness.edge_node_crossing_penalty,
 					optimizer.best.top()->f_overlap /
-						optimizer.fitness.node_overlap_penalty
+						optimizer.fitness.node_overlap_penalty,
+					optimizer.best.top()->c_invert_pos,
+					optimizer.best.top()->f_link_pos,
+					optimizer.best.top()->c_angle,
+					optimizer.best.top()->f_link_angle
 				);
 				log << std::endl;
 			}
