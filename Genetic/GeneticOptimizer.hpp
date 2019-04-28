@@ -8,7 +8,7 @@
 
 namespace usagi::genetic
 {
-template <typename Genotype>
+template <typename Genotype, typename Fitness>
 struct Individual
 {
 	std::uint32_t birthday = 0;
@@ -20,6 +20,7 @@ struct Individual
 
 	// generator provides genotype
 	Genotype genotype;
+	Fitness fitness { };
 
 	// todo use trait functions -> genotype() -> auto &
 };
@@ -32,9 +33,13 @@ template <
 	typename CrossoverOperator,
 	typename MutationOperator,
 	typename ReplacementStrategy,
+	typename StopCondition,
 	typename PopulationGenerator,
 	typename Genotype = std::vector<Gene>,
-	typename Individual = Individual<Genotype>,
+	typename Individual = Individual<
+		Genotype,
+		typename FitnessFunction::FitnessT
+	>,
 	typename Population = std::vector<Individual>,
 	typename Rng = std::mt19937
 >
@@ -46,6 +51,7 @@ struct GeneticOptimizer
 	using CrossoverOperatorT = CrossoverOperator;
 	using MutationOperatorT = MutationOperator;
 	using ReplacementStrategyT = ReplacementStrategy;
+	using StopConditionT = StopCondition;
 	using RngT = Rng;
 	using PopulationGeneratorT = PopulationGenerator;
 	using GenotypeT = Genotype;
@@ -61,6 +67,7 @@ struct GeneticOptimizer
 	ReplacementStrategyT replacement;
 	PopulationT population;
 	PopulationGeneratorT generator;
+	StopConditionT stop_condition;
 
 	std::size_t population_size = 100;
 	std::uint32_t year = 0;
@@ -90,8 +97,6 @@ struct GeneticOptimizer
 	};
 	std::vector<FitnessHistory> fitness_history;
 	FitnessT last_best_fitness = -10e10f;
-	FitnessT significant_improvement_threshold = 50;
-	std::uint32_t significant_improvement_period = 20'000;
 
 	auto chooseParents()
 	{
@@ -147,22 +152,7 @@ struct GeneticOptimizer
 
 	bool stopCondition()
 	{
-		// don't stop if we even didn't start
-		if(fitness_history.empty()) return false;
-		auto i = fitness_history.rbegin();
-		for(; i != fitness_history.rend(); ++i)
-		{
-			// search for the other end of evaluation interval
-			if(year - i->year >= significant_improvement_period) break;
-		}
-		// if the search went through the whole history, take the first item.
-		if(i == fitness_history.rend()) --i;
-		// continue if we haven't reach iteration limit
-		if(year - i->year < significant_improvement_period)
-			return false;
-		auto improvement = best.top()->fitness - i->fitness;
-		// if no significant improvement within certain evaluation period, stop
-		return improvement < significant_improvement_threshold;
+		return stop_condition(*this);
 	}
 
 	auto step()

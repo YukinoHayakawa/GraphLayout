@@ -48,6 +48,9 @@
     <ClInclude Include="Genetic\BinaryHeap.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Genetic\StopCondition.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Demo\GraphLayoutDemo.cpp">

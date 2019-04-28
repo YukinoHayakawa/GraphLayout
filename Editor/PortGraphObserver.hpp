@@ -10,14 +10,14 @@
 #include <GraphLayout/Genetic/Crossover.hpp>
 #include <GraphLayout/Genetic/Mutation.hpp>
 #include <GraphLayout/Genetic/Replacement.hpp>
+#include <GraphLayout/Genetic/StopCondition.hpp>
 
 namespace usagi
 {
-struct PortGraphIndividual : genetic::Individual<std::vector<float>>
+struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 {
 	node_graph::PortGraph graph;
 
-	float fitness = 0;
 	float f_overlap = 0;
 	float f_link_pos = 0;
 	float f_link_angle = 0;
@@ -106,6 +106,7 @@ class PortGraphObserver
 		genetic::crossover::WholeArithmeticRecombination,
 		genetic::mutation::UniformRealMutation<Genotype>,
 		genetic::replacement::RoundRobinTournamentReplacement<10, 2>,
+		genetic::stop::SolutionConvergedStopCondition<float>,
 		PortGraphPopulationGenerator,
 		Genotype,
 		PortGraphIndividual

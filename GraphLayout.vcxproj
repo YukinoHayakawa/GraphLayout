@@ -20,6 +20,7 @@
     <ClInclude Include="Genetic\Mutation.hpp" />
     <ClInclude Include="Genetic\ParentSelection.hpp" />
     <ClInclude Include="Genetic\Replacement.hpp" />
+    <ClInclude Include="Genetic\StopCondition.hpp" />
     <ClInclude Include="Graph\NodeGraph.hpp" />
     <ClInclude Include="Spring\SimpleSpring.hpp" />
   </ItemGroup>

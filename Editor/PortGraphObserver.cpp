@@ -654,13 +654,13 @@ void PortGraphObserver::draw(const Clock &clock)
 			Checkbox("Stop When Reached Termination Condition",
 				&mStopWhenReachedTerminationCondition);
 			SliderFloat("Significant Improvement Threshold",
-				&mOptimizer.significant_improvement_threshold,
+				&mOptimizer.stop_condition.significant_improvement_threshold,
 				1, 1000);
-			int period = mOptimizer.significant_improvement_period;
+			int period = mOptimizer.stop_condition.significant_improvement_period;
 			SliderInt("Significant Improvement Period",
 				&period,
 				1'000, 100'000);
-			mOptimizer.significant_improvement_period = period;
+			mOptimizer.stop_condition.significant_improvement_period = period;
 		}
 		SliderInt("Generations Per Step", &mStep, 1, 500);
 		Checkbox("Progress", &mProgress);
