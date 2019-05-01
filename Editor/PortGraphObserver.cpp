@@ -491,13 +491,13 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 			// edge_crossings, edge_node_crossings, overlap,
 			// c_invert_pos, f_link_pos, c_angle, f_link_angle,
 			// stop_threshold, stop_period,
-			// heuristic, c_bezier_factor_a, c_bezier_factor_b
+			// heuristic
 			if(mContinueTests)
 			{
 				LOG(info, "{} nodes: graph {}, opti {}, time {}",
 					node_amount, i, j, delta_time.count());
 				auto out = fmt::format(
-					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
 					proto.nodes.size(),
 					proto.links.size(),
 					mTest.canvas_size_per_node,
@@ -545,7 +545,7 @@ void PortGraphObserver::performRandomizedTests()
 	if(mTestName.empty())
 		mTestFolder = fmt::format("tests/{}", time(nullptr));
 	else
-		mTestFolder = fmt::format("tests/{}_{}", time(nullptr), mTestName);
+		mTestFolder = fmt::format("tests/{}_{}", time(nullptr), mTestName.c_str());
 	create_directories(mTestFolder);
 
 	using namespace std::chrono_literals;
@@ -738,7 +738,7 @@ void PortGraphObserver::draw(const Clock &clock)
 				&iterations, 1000, 20'000);
 			mTest.stop.significant_improvement_period = iterations;
 
-			mTestName.resize(36);
+			mTestName.resize(128);
 			InputText("Test Name", mTestName.data(), mTestName.size());
 			using namespace std::chrono_literals;
 			if(!mTestThread.valid() || mTestThread.wait_for(0s) == std::future_status::ready)
