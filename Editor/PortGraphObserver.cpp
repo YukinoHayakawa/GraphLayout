@@ -304,7 +304,8 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	{
 		if(heuristic)
 		{
-			std::array<float, 5> ctrl_factor = { 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
+			std::array<float, 4> ctrl_factor = { 0.8f, 0.6f, 0.4f, 0.2f };
+			constexpr auto size = ctrl_factor.size();
 			struct setting
 			{
 				float ca, cb;
@@ -316,20 +317,26 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 					return en_cross < rhs.en_cross;
 				}
 			};
-			std::array<setting, 25> cross_count;
-
-			std::size_t k = 0;
-			for(std::size_t i = 0; i < ctrl_factor.size(); ++i)
+			std::array<setting, size * size> cross_count;
+			// fill combinations
 			{
-				for(std::size_t j = 0; j < ctrl_factor.size(); ++j)
+				std::size_t k = 0;
+				for(std::size_t i = 0; i < ctrl_factor.size(); ++i)
 				{
-					auto &rec = cross_count[k];
-					rec.ca = ctrl_factor[i];
-					rec.cb = ctrl_factor[j];
-					rec.en_cross = countNodeEdgeCrossings(
-						g, m, rec.ca, rec.cb, false);
-					++k;
+					for(std::size_t j = 0; j < ctrl_factor.size(); ++j)
+					{
+						cross_count[k++] = { ctrl_factor[i], ctrl_factor[j], 0 };
+					}
 				}
+			}
+			std::stable_sort(cross_count.begin(), cross_count.end(),
+				[](auto &a, auto &b) {
+					return std::abs(a.ca - a.cb) < std::abs(b.ca - b.cb);
+				});
+			for(auto &&s : cross_count)
+			{
+				s.en_cross = countNodeEdgeCrossings(
+					g, m, s.ca, s.cb, false);
 			}
 			const auto min = std::min_element(
 				cross_count.begin(), cross_count.end());
