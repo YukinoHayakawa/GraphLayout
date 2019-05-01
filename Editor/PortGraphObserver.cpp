@@ -2,6 +2,7 @@
 
 #include <fmt/format.h>
 #include <fstream>
+#include <optional>
 
 #include <Usagi/Extension/ImGui/ImGui.hpp>
 
@@ -17,14 +18,13 @@ namespace
 using namespace usagi;
 
 // https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
-bool get_line_intersection(
+std::optional<Vector2f> get_line_intersection(
 	const Vector2f &p0,
 	const Vector2f &p1,
 	const Vector2f &p2,
 	const Vector2f &p3,
 	const Vector2f &ignore0,
-	const Vector2f &ignore1,
-	std::vector<Vector2f> &crosses
+	const Vector2f &ignore1
 )
 {
 	const Vector2f s1 = p1 - p0;
@@ -41,16 +41,15 @@ bool get_line_intersection(
 	if(s >= 0 && s <= 1 && t >= 0 && t <= 1)
 	{
 		const Vector2f x = p0 + t * s1;
-		if(x == ignore0) return false;
-		if(x == ignore1) return false;
+		if(x == ignore0) return { };
+		if(x == ignore1) return { };
 		// sometimes we have crossing exactly at segment crossing,
 		// so cannot do this.
 		// if(x == p0 || x == p1 || x == p2 || x == p3) return false;
-		crosses.push_back(x);
-		return true;
+		return { x };
 	}
 
-	return false;
+	return { };
 }
 
 // from imgui
@@ -82,24 +81,145 @@ void PathBezierCurveTo(
 auto getBezierControlPoints(
 	const Vector2f &p0,
 	const Vector2f &p1,
-	const Vector2f &offset
+	const Vector2f &offset,
+	const float control_factor_a,
+	const float control_factor_b
 )
 {
 	const Vector2f size = (p1 - p0).cwiseAbs();
-	const auto control_x = std::min(size.x(), 250.f);
+	// const auto control_x = std::min(size.x(), 250.f);
+	const auto control_x = size.x();
 
 	return std::make_tuple(
 		Vector2f(p0.x() + offset.x(), p0.y() + offset.y()),
 		Vector2f(
-			p0.x() + offset.x() + control_x * 0.8f,
+			p0.x() + offset.x() + control_x * control_factor_a,
 			p0.y() + offset.y()
 		),
 		Vector2f(
-			p1.x() + offset.x() - control_x * 0.8f,
+			p1.x() + offset.x() - control_x * control_factor_b,
 			p1.y() + offset.y()),
 		Vector2f(p1.x() + offset.x(), p1.y() + offset.y())
 	);
 }
+}
+
+std::size_t PortGraphFitness::countEdgeCrossings(
+	PortGraphIndividual &g,
+	std::size_t i)
+{
+	std::size_t cross = 0;
+
+	auto *base_graph = g.graph.base_graph;
+	const auto link_count = base_graph->links.size();
+	auto &curve = g.bezier_curves[i];
+
+	// estimate bezier intersections
+	// for each other curves
+	for(std::size_t j = i + 1; j < link_count; ++j)
+	{
+		// for each our line segments
+		for(std::size_t ii = 0;
+		    ii < curve.points.size() - 1; ++ii)
+		{
+			// test against their line segments
+			for(std::size_t jj = 0;
+			    jj < g.bezier_curves[j].points.size() - 1; ++jj)
+			{
+				if(!curve.bbox.intersects(g.bezier_curves[j].bbox))
+					continue;
+				auto x = get_line_intersection(
+					curve.points[ii],
+					curve.points[ii + 1],
+					g.bezier_curves[j].points[jj],
+					g.bezier_curves[j].points[jj + 1],
+					// don't count lines starting from the same port
+					curve.points.front(),
+					// don't count lines ending at the same port
+					curve.points.back()
+				);
+				if(x.has_value())
+				{
+					g.crosses.push_back(x.value());
+					++cross;
+				}
+				// g.f_link_crossing += edge_crossing_penalty;
+			}
+		}
+	}
+	return cross;
+}
+
+std::size_t PortGraphFitness::countNodeEdgeCrossings(
+	PortGraphIndividual &g,
+	const std::size_t i,
+	const float control_factor_a,
+	const float control_factor_b,
+	const bool insert_crossings)
+{
+	auto *base_graph = g.graph.base_graph;
+	const auto node_count = base_graph->nodes.size();
+
+	auto &curve = g.bezier_curves[i];
+	curve.factor_a = control_factor_a;
+	curve.factor_b = control_factor_b;
+	// build bezier curves and bounding box
+	auto [p0, p1] = g.graph.mapLinkEndPoints(i);
+	auto [a, b, c, d] = getBezierControlPoints(p0, p1, Vector2f::Zero(), curve.factor_a, curve.factor_b);
+	// PathBezierToCasteljau(bezier_points[i], a, b, c, d);
+	PathBezierCurveTo(curve.points, a, b, c, d);
+	curve.bbox = AlignedBox2f();
+	for(auto &&p : curve.points)
+	{
+		curve.bbox.extend(p);
+	}
+
+	std::size_t cross = 0;
+
+	// estimate bezier and node intersections
+
+	// for each node box
+	for(std::size_t j = 0; j < node_count; ++j)
+	{
+		auto r = g.graph.mapNodeRegion(j);
+		// the curve cannot intersect with this node
+		if(!curve.bbox.intersects(r))
+			continue;
+		// test our line segments with each of the node box edges
+		for(std::size_t ii = 0;
+			ii < curve.points.size() - 1; ++ii)
+		{
+			const std::pair<
+				AlignedBox2f::CornerType, AlignedBox2f::CornerType
+			> box_edges[] = {
+				{ AlignedBox2f::TopLeft, AlignedBox2f::TopRight },
+				{ AlignedBox2f::BottomLeft, AlignedBox2f::BottomRight },
+				{ AlignedBox2f::TopLeft, AlignedBox2f::BottomLeft },
+				{ AlignedBox2f::TopRight, AlignedBox2f::BottomRight },
+			};
+			for(auto &&e : box_edges)
+			{
+				auto x = get_line_intersection(
+					curve.points[ii],
+					curve.points[ii + 1],
+					r.corner(e.first),
+					r.corner(e.second),
+					// don't count line beginning and ending as crossings
+					curve.points.front(),
+					curve.points.back()
+				);
+				if(x.has_value())
+				{
+					// tentatively test to find the best routing
+					if(insert_crossings)
+						g.crosses.push_back(x.value());
+					++cross;
+				}
+				// g.f_link_node_crossing += edge_node_crossing_penalty;
+			}
+		}
+	}
+	return cross;
 }
 
 PortGraphFitness::FitnessT PortGraphFitness::operator()(
@@ -136,8 +256,11 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 	g.f_link_node_crossing = 0;
 	g.c_angle = 0;
 	g.c_invert_pos = 0;
-	// calculate overlapped area
 	const auto node_count = base_graph->nodes.size();
+	const auto link_count = base_graph->links.size();
+	g.bezier_curves.resize(link_count);
+	g.crosses.clear();
+	// calculate overlapped area
 	for(std::size_t i = 0; i < node_count; ++i)
 	{
 		auto r0 = g.graph.mapNodeRegion(i);
@@ -149,62 +272,10 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 				g.f_overlap += node_overlap_penalty;
 		}
 	}
-	// calculate link position
-	const auto link_count = base_graph->links.size();
-	// for(std::size_t i = 0; i < link_count; ++i)
-	// {
-	// 	auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
-	// 	g.f_link_pos -= (pos0 - pos1).norm();
-	// }
-	// calculate link angle
-	g.bezier_curves.resize(link_count);
-	g.crosses.clear();
+	// measure angles and edge directions
 	for(std::size_t i = 0; i < link_count; ++i)
 	{
-		auto [p0, p1] = g.graph.mapLinkEndPoints(i);
-		// bezier_points[i].clear();
-		auto [a, b, c, d] = getBezierControlPoints(p0, p1, Vector2f::Zero());
-		// PathBezierToCasteljau(bezier_points[i], a, b, c, d);
-		PathBezierCurveTo(g.bezier_curves[i].points, a, b, c, d);
-		g.bezier_curves[i].bbox = AlignedBox2f();
-		for(auto &&p : g.bezier_curves[i].points)
-		{
-			g.bezier_curves[i].bbox.extend(p);
-		}
-	}
-	for(std::size_t i = 0; i < link_count; ++i)
-	{
-		auto [p0, p1] = g.graph.mapLinkEndPoints(i);
-
-		AlignedBox2f box0 { p0, p1 };
-		// estimate bezier intersections
-		for(std::size_t j = i + 1; j < link_count; ++j)
-		{
-			auto [pp0, pp1] = g.graph.mapLinkEndPoints(j);
-			for(std::size_t ii = 0;
-				ii < g.bezier_curves[i].points.size() - 1; ++ii)
-			{
-				for(std::size_t jj = 0;
-					jj < g.bezier_curves[j].points.size() - 1; ++jj)
-				{
-					if(!g.bezier_curves[i].bbox.intersects(g.bezier_curves[j].bbox))
-						continue;
-					if(get_line_intersection(
-						g.bezier_curves[i].points[ii],
-						g.bezier_curves[i].points[ii + 1],
-						g.bezier_curves[j].points[jj],
-						g.bezier_curves[j].points[jj + 1],
-						// don't count lines starting from the same port
-						g.bezier_curves[i].points.front(),
-						// don't count lines ending at the same port
-						g.bezier_curves[i].points.back(),
-						g.crosses
-					))
-						g.f_link_crossing += edge_crossing_penalty;
-				}
-			}
-		}
-
+		auto[p0, p1] = g.graph.mapLinkEndPoints(i);
 		Vector2f edge_diff = p1 - p0;
 		Vector2f normalized_edge = edge_diff.normalized();
 		// normalized edge direction using dot product. prefer edge towards
@@ -219,42 +290,63 @@ PortGraphFitness::FitnessT PortGraphFitness::operator()(
 		g.f_link_angle -= std::max(p_max_angle, deg_angle);
 		if(deg_angle > p_max_angle)
 			++g.c_angle;
+	}
+	// calculate link position
+	// const auto link_count = base_graph->links.size();
+	// for(std::size_t i = 0; i < link_count; ++i)
+	// {
+	// 	auto [pos0, pos1] = g.graph.mapLinkEndPoints(i);
+	// 	g.f_link_pos -= (pos0 - pos1).norm();
+	// }
+	// calculate link angle
 
-		// estimate bezier and node intersections
-		for(std::size_t j = 0; j < node_count; ++j)
+	for(std::size_t m = 0; m < link_count; ++m)
+	{
+		if(heuristic)
 		{
-			auto r = g.graph.mapNodeRegion(j);
-			// the curve cannot intersect with this node
-			if(!g.bezier_curves[i].bbox.intersects(r))
-				continue;
-			for(std::size_t ii = 0;
-				ii < g.bezier_curves[i].points.size() - 1; ++ii)
+			std::array<float, 5> ctrl_factor = { 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
+			struct setting
 			{
-				const std::pair<
-					AlignedBox2f::CornerType, AlignedBox2f::CornerType
-				> box_edges[] = {
-					{ AlignedBox2f::TopLeft, AlignedBox2f::TopRight },
-					{ AlignedBox2f::BottomLeft, AlignedBox2f::BottomRight },
-					{ AlignedBox2f::TopLeft, AlignedBox2f::BottomLeft },
-					{ AlignedBox2f::TopRight, AlignedBox2f::BottomRight },
-				};
-				for(auto &&e : box_edges)
+				float ca, cb;
+				std::size_t en_cross;
+
+				bool operator<(setting &rhs) const
 				{
-					if(get_line_intersection(
-						g.bezier_curves[i].points[ii],
-						g.bezier_curves[i].points[ii + 1],
-						r.corner(e.first),
-						r.corner(e.second),
-						// don't count line beginning and ending as crossings
-						g.bezier_curves[i].points.front(),
-						g.bezier_curves[i].points.back(),
-						g.crosses
-					))
-						g.f_link_node_crossing += edge_node_crossing_penalty;
+					// try to reduce edge-node crossings
+					return en_cross < rhs.en_cross;
+				}
+			};
+			std::array<setting, 25> cross_count;
+
+			std::size_t k = 0;
+			for(std::size_t i = 0; i < ctrl_factor.size(); ++i)
+			{
+				for(std::size_t j = 0; j < ctrl_factor.size(); ++j)
+				{
+					auto &rec = cross_count[k];
+					rec.ca = ctrl_factor[i];
+					rec.cb = ctrl_factor[j];
+					rec.en_cross = countNodeEdgeCrossings(
+						g, m, rec.ca, rec.cb, false);
+					++k;
 				}
 			}
+			const auto min = std::min_element(
+				cross_count.begin(), cross_count.end());
+			// generating bezier curve segments here
+			const auto x = countNodeEdgeCrossings(g, m, min->ca, min->cb, true);
+			g.f_link_node_crossing += x * edge_node_crossing_penalty;
+		}
+		else
+		{
+			g.f_link_node_crossing += edge_node_crossing_penalty * countNodeEdgeCrossings(g, m, 0.8f, 0.8f, true);
 		}
 	}
+	for(std::size_t m = 0; m < link_count; ++m)
+	{
+		g.f_link_crossing += edge_crossing_penalty * countEdgeCrossings(g, m);
+	}
+
 	fit = g.f_overlap
 		+ g.f_link_pos
 		+ g.f_link_angle
@@ -334,6 +426,7 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 
 	OptimizerT optimizer;
 	auto &proto = optimizer.generator.prototype;
+	optimizer.fitness.heuristic = mTest.heuristic;
 
 	const auto canvas_size = mTest.canvas_size_per_node * node_amount;
 	// set canvas size proportionate to the amount of nodes
@@ -397,13 +490,14 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 			// population, finish_iterations, time, fitness,
 			// edge_crossings, edge_node_crossings, overlap,
 			// c_invert_pos, f_link_pos, c_angle, f_link_angle,
-			// stop_threshold, stop_period
+			// stop_threshold, stop_period,
+			// heuristic, c_bezier_factor_a, c_bezier_factor_b
 			if(mContinueTests)
 			{
 				LOG(info, "{} nodes: graph {}, opti {}, time {}",
 					node_amount, i, j, delta_time.count());
-				fmt::print(log,
-					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+				auto out = fmt::format(
+					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
 					proto.nodes.size(),
 					proto.links.size(),
 					mTest.canvas_size_per_node,
@@ -425,9 +519,11 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 					optimizer.best.top()->c_angle,
 					optimizer.best.top()->f_link_angle,
 					optimizer.stop_condition.significant_improvement_threshold,
-					optimizer.stop_condition.significant_improvement_period
+					optimizer.stop_condition.significant_improvement_period,
+					optimizer.fitness.heuristic
 				);
-				log << std::endl;
+				LOG(info, out);
+				log << out << std::endl;
 			}
 			else
 			{
@@ -543,13 +639,16 @@ void PortGraphObserver::draw(const Clock &clock)
 
 		for(std::size_t i = 0; i < b.links.size(); ++i)
 		{
+			auto &curve = show->bezier_curves[i];
+			auto &points = curve.points;
 			auto [p0, p1] = g.mapLinkEndPoints(i);
-			auto [a, b, c, d] = getBezierControlPoints(p0, p1, (Vector2f&)p);
+			auto [a, b, c, d] = getBezierControlPoints(
+				p0, p1, (Vector2f&)p,
+				curve.factor_a, curve.factor_b);
 
 			if(mShowDebugBezierCurves)
 			{
-				auto &curve = show->bezier_curves[i];
-				auto &points = curve.points;
+
 				draw_list->AddRect(
 					scr(curve.bbox.corner(AlignedBox2f::TopLeft)),
 					scr(curve.bbox.corner(AlignedBox2f::BottomRight)),
@@ -629,6 +728,9 @@ void PortGraphObserver::draw(const Clock &clock)
 			SliderFloat("Canvas Size Per Node",
 				&mTest.canvas_size_per_node, 100, 500);
 
+			Checkbox("Use Bezier Control Point Heuristic",
+				&mTest.heuristic);
+
 			SliderFloat("Stop Threshold",
 				&mTest.stop.significant_improvement_threshold, 50, 500);
 			int iterations = mTest.stop.significant_improvement_period;
@@ -680,6 +782,8 @@ void PortGraphObserver::draw(const Clock &clock)
 				&period,
 				1'000, 100'000);
 			mOptimizer.stop_condition.significant_improvement_period = period;
+			Checkbox("Use Bezier Heuristic",
+				&mOptimizer.fitness.heuristic);
 		}
 		SliderInt("Generations Per Step", &mStep, 1, 500);
 		Checkbox("Progress", &mProgress);

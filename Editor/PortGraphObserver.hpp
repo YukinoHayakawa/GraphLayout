@@ -34,6 +34,8 @@ struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 	{
 		std::array<Vector2f, BEZIER_POINT_COUNT> points;
 		AlignedBox2f bbox;
+		float factor_a = 0;
+		float factor_b = 0;
 	};
 	std::vector<BezierInfo> bezier_curves;
 };
@@ -42,6 +44,7 @@ struct PortGraphFitness
 {
 	using FitnessT = float;
 
+	bool heuristic = true;
 	bool center_graph = false;
 	int grid = 1;
 	float p_max_angle = 60;
@@ -51,6 +54,15 @@ struct PortGraphFitness
 	float edge_crossing_penalty = -100;
 	float edge_node_crossing_penalty = -100;
 
+	std::size_t countEdgeCrossings(
+		PortGraphIndividual &g,
+		std::size_t link_idx);
+	std::size_t countNodeEdgeCrossings(
+		PortGraphIndividual &g,
+		std::size_t link_idx,
+		float control_factor_a,
+		float control_factor_b,
+		bool insert_crossings);
 	FitnessT operator()(PortGraphIndividual &g);
 };
 
@@ -65,6 +77,7 @@ struct RandomTestConfig
 	int repeat = 5;
 	int population = 100;
 	float canvas_size_per_node = 250;
+	bool heuristic = true;
 
 	int pin_amount = 5;
 	// # of edges / # of nodes
