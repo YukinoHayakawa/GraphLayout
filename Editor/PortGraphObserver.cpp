@@ -385,6 +385,7 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 			if(!mContinueTests) goto abort;
 
 			optimizer.initializePopulation(mTest.population);
+			optimizer.stop_condition = mTest.stop;
 
 			const auto begin_time = std::chrono::high_resolution_clock::now();
 			while(mContinueTests && !optimizer.stopCondition())
@@ -395,13 +396,14 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 			// nodes, links, unit_canvas, canvas, ports, connection_rate,
 			// population, finish_iterations, time, fitness,
 			// edge_crossings, edge_node_crossings, overlap,
-			// c_invert_pos, f_link_pos, c_angle, f_link_angle
+			// c_invert_pos, f_link_pos, c_angle, f_link_angle,
+			// stop_threshold, stop_period
 			if(mContinueTests)
 			{
 				LOG(info, "{} nodes: graph {}, opti {}, time {}",
 					node_amount, i, j, delta_time.count());
 				fmt::print(log,
-					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+					"{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
 					proto.nodes.size(),
 					proto.links.size(),
 					mTest.canvas_size_per_node,
@@ -421,7 +423,9 @@ void PortGraphObserver::performRandomizedTest(int node_amount)
 					optimizer.best.top()->c_invert_pos,
 					optimizer.best.top()->f_link_pos,
 					optimizer.best.top()->c_angle,
-					optimizer.best.top()->f_link_angle
+					optimizer.best.top()->f_link_angle,
+					optimizer.stop_condition.significant_improvement_threshold,
+					optimizer.stop_condition.significant_improvement_period
 				);
 				log << std::endl;
 			}
@@ -442,7 +446,10 @@ abort:
 // https://stackoverflow.com/questions/9094422/how-to-check-if-a-stdthread-is-still-running
 void PortGraphObserver::performRandomizedTests()
 {
-	mTestFolder = fmt::format("tests/{}", time(nullptr));
+	if(mTestName.empty())
+		mTestFolder = fmt::format("tests/{}", time(nullptr));
+	else
+		mTestFolder = fmt::format("tests/{}_{}", time(nullptr), mTestName);
 	create_directories(mTestFolder);
 
 	using namespace std::chrono_literals;
@@ -456,9 +463,9 @@ void PortGraphObserver::performRandomizedTests()
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 #endif
 		std::vector<int> indices;
-		indices.reserve(mTest.finish_node_amount - mTest.start_node_amount + 1);
+		// indices.reserve(mTest.finish_node_amount - mTest.start_node_amount + 1);
 		for(auto i = mTest.start_node_amount;
-			i <= mTest.finish_node_amount; ++i)
+			i <= mTest.finish_node_amount; i += mTest.step)
 		{
 			indices.emplace_back(i);
 		}
@@ -607,6 +614,8 @@ void PortGraphObserver::draw(const Clock &clock)
 				1, 200);
 			SliderInt("Finish Node Amount", &mTest.finish_node_amount,
 				mTest.start_node_amount, 200);
+			SliderInt("Step", &mTest.step,
+				1, 20);
 			SliderInt("# Graph", &mTest.generation,
 				1, 20);
 			SliderInt("# Optimization", &mTest.repeat,
@@ -619,6 +628,16 @@ void PortGraphObserver::draw(const Clock &clock)
 				&mTest.pin_connection_rate, 0, 20);
 			SliderFloat("Canvas Size Per Node",
 				&mTest.canvas_size_per_node, 100, 500);
+
+			SliderFloat("Stop Threshold",
+				&mTest.stop.significant_improvement_threshold, 50, 500);
+			int iterations = mTest.stop.significant_improvement_period;
+			SliderInt("Stop Iterations",
+				&iterations, 1000, 20'000);
+			mTest.stop.significant_improvement_period = iterations;
+
+			mTestName.resize(36);
+			InputText("Test Name", mTestName.data(), mTestName.size());
 			using namespace std::chrono_literals;
 			if(!mTestThread.valid() || mTestThread.wait_for(0s) == std::future_status::ready)
 			{

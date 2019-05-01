@@ -16,7 +16,7 @@ namespace usagi
 {
 struct PortGraphIndividual : genetic::Individual<std::vector<float>, float>
 {
-	node_graph::PortGraph graph;
+	node_graph::NodeGraphInstance graph;
 
 	float f_overlap = 0;
 	float f_link_pos = 0;
@@ -58,6 +58,7 @@ struct RandomTestConfig
 {
 	int start_node_amount = 4;
 	int finish_node_amount = 100;
+	int step = 1;
 	// # of randomly generated graph
 	int generation = 5;
 	// # of repeated optimization on each generated graph
@@ -68,6 +69,8 @@ struct RandomTestConfig
 	int pin_amount = 5;
 	// # of edges / # of nodes
 	float pin_connection_rate = 2;
+
+	genetic::stop::SolutionConvergedStopCondition<float> stop;
 };
 
 struct PortGraphPopulationGenerator
@@ -88,7 +91,7 @@ struct PortGraphPopulationGenerator
 		individual.graph.base_graph = &prototype;
 		individual.graph.node_positions = reinterpret_cast<Vector2f*>(
 			individual.genotype.data());
-		return std::move(individual);
+		return individual;
 	}
 };
 
@@ -125,6 +128,7 @@ class PortGraphObserver
 	std::filesystem::path mGraphPath = "Data/graphs";
 	std::filesystem::path mCurrentGraph = "Data/graphs";
 	std::filesystem::path mTestFolder;
+	std::string mTestName;
 
 	RandomTestConfig mTest;
 	bool mContinueTests = true;
