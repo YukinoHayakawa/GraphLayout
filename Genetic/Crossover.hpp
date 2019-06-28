@@ -27,14 +27,14 @@ struct OnePointCrossover
 
 struct WholeArithmeticRecombination
 {
-	template <typename Genotype, typename RNG>
-	void operator()(Genotype &a, Genotype &b, RNG &)
-	{
-		assert(a.size() == b.size());
-		for(auto i = a.begin(), j = b.begin(); i != a.end(); ++i, ++j)
-		{
-			*i = *j = 0.5f * (*i + *j);
-		}
-	}
+    template <typename Genotype, typename RNG>
+    void operator()(Genotype &a, Genotype &b, RNG &)
+    {
+        assert(a.size() == b.size());
+        for(auto i = a.begin(), j = b.begin(); i != a.end(); ++i, ++j)
+        {
+            *i = *j = 0.5f * (*i + *j);
+        }
+    }
 };
 }
