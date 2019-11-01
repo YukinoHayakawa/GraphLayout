@@ -1,10 +1,14 @@
 ﻿#include "PortGraphObserver.hpp"
 
-#include <fmt/format.h>
 #include <fstream>
 #include <optional>
+#include <array>
 
-#include <Usagi/Extension/ImGui/ImGui.hpp>
+#include <Usagi/Core/Format.hpp>
+#include <Usagi/Extensions/SysImGui/ImGui.hpp>
+#include <Usagi/Math/Matrix.hpp>
+#include <Usagi/Math/Angle.hpp>
+#include <Usagi/Math/Bound.hpp>
 
 #ifdef _WIN32
 #    define WIN32_LEAN_AND_MEAN

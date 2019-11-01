@@ -2,7 +2,8 @@
 
 #include <vector>
 
-#include <Usagi/Core/Math.hpp>
+#include <Usagi/Math/Matrix.hpp>
+#include <Usagi/Math/Bound.hpp>
 #include <filesystem>
 
 namespace usagi::node_graph

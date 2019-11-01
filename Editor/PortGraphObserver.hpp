@@ -3,7 +3,7 @@
 #include <future>
 
 #include <Usagi/Core/Element.hpp>
-#include <Usagi/Extension/ImGui/ImGuiComponent.hpp>
+#include <Usagi/Extensions/SysImGui/ImGuiComponent.hpp>
 #include <GraphLayout/Graph/NodeGraph.hpp>
 #include <GraphLayout/Genetic/GeneticOptimizer.hpp>
 #include <GraphLayout/Genetic/ParentSelection.hpp>

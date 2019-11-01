@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include <Usagi/Core/Logging.hpp>
+#include <Usagi/Math/Lerp.hpp>
 
 usagi::node_graph::Port::Port(std::string name, Edge edge, float edge_pos)
     : name(std::move(name))

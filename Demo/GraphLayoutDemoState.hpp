@@ -2,7 +2,7 @@
 
 #include <Usagi/Graphics/Game/GraphicalGameState.hpp>
 #include <Usagi/Camera/Controller/CameraMan.hpp>
-#include <Usagi/Extension/DebugDraw/DebugDrawComponent.hpp>
+#include <Usagi/Extensions/SysDebugDraw/DebugDrawComponent.hpp>
 
 namespace usagi
 {

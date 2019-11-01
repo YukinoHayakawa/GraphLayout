@@ -3,8 +3,8 @@
 #include <Usagi/Graphics/Game/GraphicalGame.hpp>
 #include <Usagi/Runtime/Runtime.hpp>
 #include <Usagi/Runtime/Input/InputManager.hpp>
-#include <Usagi/Extension/ImGui/ImGuiSystem.hpp>
-#include <Usagi/Extension/Nuklear/NuklearSystem.hpp>
+#include <Usagi/Extensions/SysImGui/ImGuiSystem.hpp>
+#include <Usagi/Extensions/SysNuklear/NuklearSystem.hpp>
 
 #include "PortGraphObserver.hpp"
 

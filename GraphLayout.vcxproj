@@ -32,6 +32,24 @@
     <ClCompile Include="Graph\NodeGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Extensions\Usagi\Extensions\RtVulkanWin32WSI\RtVulkanWin32WSI.vcxproj">
+      <Project>{90aadbd8-3cd0-4bf3-b5c0-9a31d2d96c94}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Extensions\Usagi\Extensions\RtVulkan\RtVulkan.vcxproj">
+      <Project>{e50d0ec3-61ad-4217-ac53-99cf51de8593}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Extensions\Usagi\Extensions\RtWin32\RtWin32.vcxproj">
+      <Project>{fbe0a064-8702-44a3-a308-167f78281dc7}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Extensions\Usagi\Extensions\SysDebugDraw\SysDebugDraw.vcxproj">
+      <Project>{5a680ce7-4229-4dc6-9f57-f50fe5c512ae}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Extensions\Usagi\Extensions\SysImGui\SysImGui.vcxproj">
+      <Project>{2888f8d3-ab7c-4d3b-b1e9-4bd26be777d2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Extensions\Usagi\Extensions\SysNuklear\SysNuklear.vcxproj">
+      <Project>{bd64758a-4747-422b-9718-cfb9e827327c}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\Usagi\Usagi\Usagi.vcxproj">
       <Project>{4250e1c0-ea0b-4575-bc04-11e7f83c2ed4}</Project>
     </ProjectReference>
@@ -74,6 +92,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -110,6 +131,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <Manifest>
+      <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -18,7 +18,6 @@ usagi::GraphLayoutDemo::GraphLayoutDemo(std::shared_ptr<Runtime> runtime)
     assets()->addChild<FilesystemAssetPackage>("dd", "Data/debugdraw");
     createMainWindow(
         u8"Graph Layout Demo",
-        Vector2i { 100, 100 },
         Vector2u32 { 1920, 1080 }
     );
     setupRenderTargets(true);
